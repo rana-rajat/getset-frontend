@@ -20,7 +20,6 @@ export default function Home() {
                 const res = await axios.get('/api/v1/properties');
                 setProperties(res.data.content || []);
 
-                // Fetch favorites and unread count if logged in
                 const token = localStorage.getItem('accessToken');
                 if (token) {
                     try {
@@ -82,193 +81,301 @@ export default function Home() {
         }
     };
 
-    const categories = ['All', 'House', 'Apartment', 'Loft', 'Condo'];
+    const categories = ['All', 'Villas', 'Lofts', 'Beach', 'Cabin'];
+    const categoryIcons: Record<string, string> = {
+        'All': 'apps',
+        'Villas': 'villa',
+        'Lofts': 'apartment',
+        'Beach': 'beach_access',
+        'Cabin': 'landscape'
+    };
 
     const filteredProperties = activeCategory === 'All'
         ? properties
         : properties.filter(p => p.propertyType?.toLowerCase() === activeCategory.toLowerCase() || p.title.toLowerCase().includes(activeCategory.toLowerCase()));
 
     return (
-        <div className="relative flex h-full min-h-screen w-full flex-col bg-white dark:bg-slate-950 shadow-2xl animate-fade-in">
+        <div className="relative font-display bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 antialiased min-h-screen pb-24 md:pb-0">
 
-            {/* Mobile Header Section */}
-            <div className="sticky top-0 z-10 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 pb-2 md:mt-20">
-                {/* Status Bar Placeholder (iOS Safe Area) */}
-                <div className="h-4 w-full md:hidden"></div>
-
-                {/* Greeting & Notification */}
-                <div className="flex items-center justify-between px-4 md:px-8 pb-2">
-                    <div className="flex items-center gap-2 text-primary">
-                        <span className="material-symbols-outlined filled">location_on</span>
-                        <span className="text-sm font-semibold text-slate-500 dark:text-slate-400">San Francisco, CA</span>
+            {/* Desktop Navbar */}
+            <header className="hidden md:flex items-center bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md sticky top-0 z-50 p-4 justify-between border-b border-primary/10">
+                <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
+                    <div className="text-primary flex size-10 shrink-0 items-center justify-center bg-primary/10 rounded">
+                        <span className="material-symbols-outlined text-2xl">roofing</span>
                     </div>
-                    <button className="relative flex items-center justify-center text-slate-900 dark:text-white p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 md:hidden transition-colors">
-                        <span className="material-symbols-outlined">notifications</span>
-                        <span className="absolute top-2 right-2 h-2 w-2 rounded-full bg-red-500 border border-white dark:border-slate-950"></span>
+                    <h2 className="text-slate-900 dark:text-slate-100 text-xl font-black leading-tight tracking-tighter uppercase">GetSet</h2>
+                </div>
+
+                <div className="flex items-center gap-6">
+                    <Link to="/" className="text-sm font-semibold text-primary uppercase tracking-widest">Explore</Link>
+                    <Link to="/saved" className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors uppercase tracking-widest">Saved</Link>
+                    <Link to="/messages" className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors relative uppercase tracking-widest">
+                        Messages
+                        {unreadCount > 0 && <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+                    </Link>
+                </div>
+
+                <div className="flex items-center gap-4">
+                    <button className="flex items-center justify-center rounded-full size-10 bg-primary/10 text-primary">
+                        <span className="material-symbols-outlined">search</span>
                     </button>
-                    <div className="hidden md:block">
-                        <h1 className="text-3xl font-bold leading-tight tracking-tight text-slate-900 dark:text-white">Discover your <span className="text-primary">perfect home.</span></h1>
+                    {isLoggedIn ? (
+                        <button onClick={() => navigate('/dashboard')} className="flex items-center justify-center rounded-full size-10 bg-primary text-white shadow-lg shadow-primary/20 transition-transform active:scale-95">
+                            <span className="material-symbols-outlined">person</span>
+                        </button>
+                    ) : (
+                        <button onClick={() => navigate('/login')} className="bg-primary hover:bg-primary/90 text-white px-6 py-2 rounded-full font-bold flex items-center justify-center transition-colors">
+                            Log In
+                        </button>
+                    )}
+                </div>
+            </header>
+
+            {/* Mobile Header/Search Navigation */}
+            <div className="md:hidden absolute top-6 left-6 right-6 z-20">
+                <div className="bg-white/15 dark:bg-background-dark/60 backdrop-blur-xl border border-white/20 dark:border-white/10 flex items-center p-2 rounded-full shadow-lg">
+                    <div className="flex-1 flex items-center px-4 gap-3">
+                        <span className="material-symbols-outlined text-white">search</span>
+                        <input className="bg-transparent border-none focus:ring-0 text-white placeholder-white/80 text-sm w-full outline-none" placeholder="Where to next?" type="text" />
                     </div>
+                    <button className="bg-primary hover:bg-primary/90 text-white p-2 rounded-full flex items-center justify-center transition-colors">
+                        <span className="material-symbols-outlined">tune</span>
+                    </button>
                 </div>
+            </div>
 
-                {/* Main Headline (Mobile) */}
-                <div className="px-4 pb-4 md:hidden">
-                    <h1 className="text-2xl font-bold leading-tight tracking-tight text-slate-900 dark:text-white">Discover your <br /><span className="text-primary">perfect home.</span></h1>
-                </div>
+            {/* Hero Section */}
+            <div className="relative h-[85vh] md:h-[70vh] w-full flex flex-col justify-end p-6 md:p-12 bg-cover bg-center"
+                style={{ backgroundImage: "linear-gradient(to bottom, rgba(30, 27, 75, 0.2), rgba(30, 27, 75, 0.9)), url('https://lh3.googleusercontent.com/aida-public/AB6AXuAZj6m-pRdIpt8GkV_Z2XHWawyBzGyXHSfvwN5yDKOO-aIgbj8nk5kPXuADneA0KuYpmvfdGs6p-78NQTynwnATIKdGbQSDf-p5dG9Kw7m6UAVgo1ZDOBMP3ymlbY0CC9tT6XRf938Ifwop_2N_OSOP6o1ZdsSxfEKa5DTic2dq4W7FPAdRT0YxeYTmCGT0UtEkDN3UrB3KnhRRvl7fPSm-DO9_HZGoCGh-3EM_atA8RLfTOEGfPR1xaIvvLwsLVSu63mq8Z4gQ2g')" }}>
 
-                {/* Search Bar (Mobile) */}
-                <div className="px-4 md:hidden">
-                    <div className="flex w-full items-center gap-2 rounded-xl bg-slate-100 dark:bg-slate-900 px-3 py-3 shadow-sm ring-1 ring-slate-200 dark:ring-slate-800">
-                        <span className="material-symbols-outlined text-slate-400">search</span>
-                        <input className="w-full bg-transparent border-none p-0 text-base font-medium placeholder-slate-400 focus:ring-0 text-slate-900 dark:text-white outline-none" placeholder="Search city, neighborhood..." type="text" />
-                        <button className="flex items-center justify-center rounded-lg bg-primary p-2 text-white shadow-md shadow-primary/30 transition-transform active:scale-95">
-                            <span className="material-symbols-outlined text-[20px]">tune</span>
+                <div className="relative z-10 mb-8 max-w-4xl mx-auto w-full">
+                    <span className="inline-block px-4 py-1 rounded-full bg-primary/20 border border-primary/30 text-primary font-bold text-xs mb-4 uppercase tracking-widest">Premium Rentals</span>
+                    <h1 className="text-white text-5xl md:text-7xl font-black leading-[1.1] tracking-tight mb-4 uppercase">
+                        Find Your Place <br className="md:hidden" /> in the World
+                    </h1>
+                    <p className="text-slate-200 text-lg md:text-xl font-medium leading-relaxed max-w-[90%] md:max-w-[60%]">
+                        Experience breathtaking homes curated for your lifestyle.
+                    </p>
+
+                    <div className="flex gap-4 mt-8 overflow-x-auto pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                        <button onClick={() => window.scrollTo({ top: document.getElementById('featured')?.offsetTop, behavior: 'smooth' })} className="flex-none bg-primary text-white px-6 py-3 rounded-full font-bold flex items-center gap-2 shadow-lg shadow-primary/20 transition-transform active:scale-95">
+                            Explore Homes
+                        </button>
+                        <button className="flex-none bg-white/10 backdrop-blur-md border border-white/20 text-white px-6 py-3 rounded-full font-bold flex items-center gap-2 hover:bg-white/20 transition-colors">
+                            <span className="material-symbols-outlined">play_circle</span>
+                            Virtual Tour
                         </button>
                     </div>
                 </div>
+            </div>
 
-                {/* Categories */}
-                <div className="mt-4 flex w-full gap-3 overflow-x-auto px-4 md:px-8 pb-2 no-scrollbar">
+            {/* Category Section */}
+            <div className="px-6 md:px-12 -mt-6 relative z-30 max-w-6xl mx-auto">
+                <div className="bg-background-dark/80 dark:bg-background-dark backdrop-blur-xl rounded-xl p-4 md:px-10 md:py-6 flex justify-between md:justify-around items-center shadow-2xl border border-white/10 overflow-x-auto gap-4" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                     {categories.map(cat => (
-                        <button
-                            key={cat}
-                            onClick={() => setActiveCategory(cat)}
-                            className={`flex shrink-0 items-center gap-2 rounded-full px-5 py-2.5 transition-colors ${activeCategory === cat ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900' : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'}`}
-                        >
-                            <span className={`text-sm ${activeCategory === cat ? 'font-semibold' : 'font-medium'}`}>{cat}</span>
-                        </button>
+                        <div key={cat} onClick={() => setActiveCategory(cat)} className="flex flex-col items-center gap-2 cursor-pointer group shrink-0">
+                            <div className={`w-12 h-12 md:w-16 md:h-16 rounded-full flex items-center justify-center transition-colors shadow-inner ${activeCategory === cat ? 'bg-primary/20 text-primary' : 'bg-slate-700/50 text-slate-400 group-hover:bg-slate-700'}`}>
+                                <span className="material-symbols-outlined md:text-3xl">{categoryIcons[cat]}</span>
+                            </div>
+                            <span className={`text-[10px] md:text-sm font-bold uppercase tracking-widest ${activeCategory === cat ? 'text-slate-200' : 'text-slate-400 group-hover:text-slate-300'}`}>{cat}</span>
+                        </div>
                     ))}
                 </div>
             </div>
 
-            {/* Property List */}
-            <div className="flex-1 overflow-y-auto px-4 md:px-8 py-6 pb-24">
-                {/* Featured Section Header */}
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-xl md:text-2xl font-bold text-slate-900 dark:text-white">Near you</h2>
-                    <span className="text-sm font-semibold text-primary cursor-pointer hover:underline">See all</span>
+            {/* Featured Properties Grid */}
+            <section id="featured" className="mt-16 md:mt-24 px-6 md:px-12 max-w-6xl mx-auto min-h-[40vh]">
+                <div className="flex justify-between items-end mb-8 md:mb-12">
+                    <div>
+                        <h2 className="text-3xl md:text-4xl font-black tracking-tighter text-slate-900 dark:text-slate-100 uppercase">Featured Homes</h2>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base font-medium mt-1">Hand-picked premium stays</p>
+                    </div>
                 </div>
 
                 {loading && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-pulse-subtle">
-                        {[...Array(8)].map((_, i) => (
-                            <div key={i} className="flex flex-col gap-3 rounded-2xl bg-slate-50 border border-slate-100 dark:border-slate-800 dark:bg-slate-900 p-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-pulse-subtle">
+                        {[...Array(6)].map((_, i) => (
+                            <div key={i} className="flex flex-col gap-3 rounded-2xl bg-white dark:bg-background-dark p-2 border border-slate-100 dark:border-white/5">
                                 <div className="aspect-[4/3] w-full rounded-xl bg-slate-200 dark:bg-slate-800 animate-pulse"></div>
-                                <div className="flex flex-col gap-2 px-1 mt-1">
-                                    <div className="h-5 w-3/4 bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div>
-                                    <div className="flex justify-between items-center mt-2">
-                                        <div className="h-4 w-1/3 bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div>
-                                        <div className="h-6 w-1/4 bg-slate-200 dark:bg-slate-800 rounded-full animate-pulse"></div>
-                                    </div>
-                                </div>
+                                <div className="h-5 w-3/4 bg-slate-200 dark:bg-slate-800 rounded mt-2"></div>
                             </div>
                         ))}
                     </div>
                 )}
-                {error && <div className="text-center py-8 text-red-500">{error}</div>}
+
+                {error && <div className="text-center py-8 text-red-500 font-bold">{error}</div>}
 
                 {!loading && !error && filteredProperties.length === 0 && (
-                    <div className="text-center py-8 text-slate-500">No properties found.</div>
+                    <div className="text-center py-16 text-slate-500 font-medium text-lg">No breathtaking homes found. Be the first to add one!</div>
                 )}
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {/* Real Estate Cards mapped from API array */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {filteredProperties.map((property, idx) => {
-                        // Providing fallback images just for visual mapping since backend might not have URLs yet
                         const images = [
-                            "https://lh3.googleusercontent.com/aida-public/AB6AXuAcNIiYrYxyxtWEglvqku-ayJmdxEotu4mrMXVWb29MsjTwF2be--fjdCpUkW-_MRGiOnu7UgHYPsSlJCfESxsN0QCxxgXRso9VLjCpyMW-j7hxKVqdVQuluzr-paRI1iC7ntrHiDF4c0Mt2WNctYzBUSGqKVWbfCc9MFUvcV8bbwC6k7you7-R2i6GGEjNx79EvpUF6QgAN-IXR4-rqkQRrQUOyqYbCwSGr7Ky2nGh5-adaGJN6UTfthaTigxlS_W0qkjbZYlwEAL0",
-                            "https://lh3.googleusercontent.com/aida-public/AB6AXuAL20REhLqQQPgkhgUXTYNzfeaQS5Ok8cdZb6vxk1bHS0Uf7T8zAQFLgXExRUmL3y1l93n78QPPvSYyvBOsF4mTjsJQG4tyHLOM6rRNi53SyhmxsnZqPtHcO-zuBPOl-VFi1HY0r0G5SGckmaZFrilYKFif-Ans14UpDlggRSnh-D8RvprriIGWPJiWPloYOtyQBsJV7LYQvVB8Jl7XxQNU-mmeajUszGt5Xb2aP6dw0q-D_zsSCq4bRUFtLhtodQvXvOFeK-0slanR",
-                            "https://lh3.googleusercontent.com/aida-public/AB6AXuAlFiq8l-W6zcTk8oopSfH5vsMADW3eyZkzCwkQ8iNQ5gJ_lUQYXaF9bqsGICPLgSBUPSX7oymQKpexYIb6IQo7D9cjT22qzcEPS7DwimahqG6IkSVTOrFSL5ov7LaXVHyPwjzWKGhOzOwGEp6-1dJ1wHGMAtxRiGdNvFfVki7GW9lGjpkBBEUHks8hmDAX0iXuXFzeBfEiMEOzl0C8ebBDBSxZOmOukCqd3W0x4J_EiW11VLh-zwripf-LdJ0shuK5iNCkuz-v8Yge"
+                            "https://lh3.googleusercontent.com/aida-public/AB6AXuBtVtQqkDQEEvbTHZDJPOl6MQyZDnUFGNI7He59bQN7UaV9bj0UYs3VSAsPlNVqGprpBoYEQ-iw4nR4kixdi6HatpflUVsdlIuUC6_jTDRXo0pF3kA0UEBqnzYjgs7ZEsbfCV0fac4fwMuWKQvyVOR--Ywv45mt16U7iJfqflM0Xk0Lv5O7FJh4_WnOmw_P6zbdIF9XKawok3nsVilsB70M55IOT2168XYnsnLW8ydlLHpARC8sqFyt5YP1LtNLPPjSfMfrrPQjFw",
+                            "https://lh3.googleusercontent.com/aida-public/AB6AXuDfD6lFufrSwASL8Z4wb0hs5Iubjt5b1pcJJg0ir0D7qW8l7mCTWCtqmIPWFpvKsTX6ddf9AnG13xIzYedhEmel_hm3pKWAOL1Qpv6jJ1XNMZYeoK8KeqAaA3z84-87Kufg029r9r34qYocB3NBex0owESw6hUb76L4JzaUkjrOZP6oBOgFawU2D3RhjNE03rqkRSsL2s90yi1eNVE0A0jcyYnbNvWxZrvP8LjzP61silYXXqwBtOcRxct9uzI74iL5fik4Ky4vrw",
+                            "https://lh3.googleusercontent.com/aida-public/AB6AXuAX0LngODOTzMGwNmR6naBPODQBHQOJ308ndJhIU0tKKSIGNCEiZ8qJKvJk1rFbJaC5pTrIakjFi_R76ANXNzDuScbUV9isCp-J3S3cl6h41ln-jUdUPsrdvTbdjGZKJ4cff_UUB8Wt6d9OhGibUYL1Oq4XT15ZqL11cX1psPlWyC5lExqtgSwImpLGFf3i8YaFZCv6cImEhkV2rKh01UN5ZbZYMx1CjkynG2rRgesZLrFfunzHNHWpzGhqWXDet5BcbnjtJUi6wQ"
                         ];
                         const imgUrl = property.imageUrls && property.imageUrls.length > 0 ? property.imageUrls[0] : images[idx % images.length];
 
                         return (
-                            <div key={property.id} onClick={() => navigate(`/properties/${property.id}`)} className="group relative flex flex-col gap-3 rounded-2xl bg-slate-50 border border-slate-100 dark:border-slate-800 dark:bg-slate-900 cursor-pointer shadow-sm hover:shadow-md transition-shadow p-2">
-                                <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl">
-                                    <img alt={property.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" src={imgUrl} />
-                                    <button onClick={(e) => toggleFavorite(e, property.id)} className={`absolute right-3 top-3 flex h-10 w-10 items-center justify-center rounded-full transition-colors ${favorites.has(property.id) ? 'bg-white/90 text-primary hover:bg-white' : 'bg-white/20 backdrop-blur-md text-white hover:bg-white/40'}`}>
-                                        <span className="material-symbols-outlined" style={{ fontVariationSettings: favorites.has(property.id) ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
-                                    </button>
-                                    <div className="absolute bottom-3 left-3 rounded-lg bg-slate-900/60 px-2 py-1 backdrop-blur-sm">
-                                        <span className="text-xs font-semibold text-white">{property.propertyType || 'Property'}</span>
+                            <div key={property.id} onClick={() => navigate(`/properties/${property.id}`)} className="relative group cursor-pointer transition-transform duration-300 hover:-translate-y-2">
+                                <div className="relative h-64 md:h-72 w-full rounded-xl overflow-hidden shadow-xl border border-slate-100 dark:border-white/5">
+                                    <img alt={property.title} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" src={imgUrl} />
+                                    <div className="absolute top-4 right-4">
+                                        <button onClick={(e) => toggleFavorite(e, property.id)} className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors backdrop-blur-md shadow-lg ${favorites.has(property.id) ? 'bg-white text-primary' : 'bg-white/20 text-white hover:bg-white/40'}`}>
+                                            <span className="material-symbols-outlined !text-[20px]" style={{ fontVariationSettings: favorites.has(property.id) ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
+                                        </button>
+                                    </div>
+                                    <div className="absolute bottom-4 left-4">
+                                        <span className="bg-primary/90 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm font-bold shadow-lg">
+                                            ${property.pricePerMonth}<span className="font-normal opacity-80"> /mo</span>
+                                        </span>
+                                    </div>
+                                    <div className="absolute bottom-4 right-4 bg-background-dark/80 backdrop-blur-md text-white px-2 py-1 rounded shadow-lg">
+                                        <span className="text-[10px] font-bold uppercase tracking-widest">{property.propertyType || 'Villa'}</span>
                                     </div>
                                 </div>
-                                <div className="flex flex-col gap-1 px-1">
-                                    <div className="flex items-center justify-between mt-1">
-                                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">${property.pricePerMonth} <span className="text-sm font-normal text-slate-500 dark:text-slate-400">/ mo</span></h3>
-                                        <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
-                                            <span className="material-symbols-outlined text-[18px] text-yellow-500 fill-current" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-                                            <span className="text-sm font-medium text-slate-900 dark:text-white">4.8</span>
-                                        </div>
+                                <div className="mt-5 flex justify-between items-start px-1">
+                                    <div className="truncate pr-4">
+                                        <h3 className="font-extrabold text-xl text-slate-900 dark:text-slate-100 tracking-tight truncate">{property.title}</h3>
+                                        <p className="text-slate-500 dark:text-slate-400 text-sm flex items-center gap-1 mt-1 font-medium truncate">
+                                            <span className="material-symbols-outlined text-xs">location_on</span>
+                                            {property.location?.address || 'Premium Location'}
+                                        </p>
                                     </div>
-                                    <p className="text-base font-semibold text-slate-800 dark:text-slate-200 mt-1">{property.title}</p>
-                                    <div className="flex items-center gap-1 text-slate-500 dark:text-slate-400 mt-1">
-                                        <span className="material-symbols-outlined text-[18px]">location_on</span>
-                                        <span className="text-sm truncate w-full">{property.location?.address || 'San Francisco'}</span>
+                                    <div className="flex items-center gap-1 shrink-0 bg-slate-100 dark:bg-white/5 px-2 py-1 rounded-lg">
+                                        <span className="material-symbols-outlined text-primary !text-[18px] fill-current">star</span>
+                                        <span className="font-bold text-sm text-slate-900 dark:text-white">4.9</span>
                                     </div>
                                 </div>
                             </div>
                         );
                     })}
                 </div>
-            </div>
+            </section>
 
-            {/* Web Header Navigation */}
-            <div className="fixed top-0 left-0 w-full z-50 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 py-4 hidden md:flex items-center justify-between">
-                <div className="flex items-center gap-8">
-                    <h1 className="text-2xl font-bold tracking-tight text-primary">GetSet</h1>
-                    <div className="flex items-center gap-6">
-                        <Link to="/" className="text-sm font-semibold text-primary">Explore</Link>
-                        <Link to="/saved" className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">Saved</Link>
-                        <Link to="/messages" className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors relative">
-                            Messages
-                            {unreadCount > 0 && <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">{unreadCount > 99 ? '99+' : unreadCount}</span>}
-                        </Link>
-                    </div>
+            {/* Value Proposition Layer */}
+            <section className="mt-24 px-6 md:px-12 py-16 md:py-24 bg-slate-900 dark:bg-black rounded-t-[3rem] md:rounded-[3rem] max-w-7xl mx-auto shadow-2xl relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                <div className="max-w-4xl mx-auto text-center mb-12 md:mb-16 relative z-10">
+                    <span className="text-primary font-bold text-xs md:text-sm tracking-widest uppercase mb-4 block">Premium Rental Process</span>
+                    <h2 className="text-white text-4xl md:text-5xl font-black leading-tight uppercase tracking-tighter">
+                        The GetSet Advantage
+                    </h2>
+                    <p className="text-slate-400 text-lg md:text-xl font-medium leading-relaxed mt-4 max-w-2xl mx-auto">
+                        Experience a breathtaking rental process with our verified, high-end platform built for modern living.
+                    </p>
                 </div>
-                <div className="flex items-center gap-4">
-                    <div className="flex w-64 items-center gap-2 rounded-full bg-slate-100 dark:bg-slate-900 px-4 py-2 ring-1 ring-slate-200 dark:ring-slate-800">
-                        <span className="material-symbols-outlined text-slate-400 text-sm">search</span>
-                        <input className="w-full bg-transparent border-none p-0 text-sm font-medium placeholder-slate-400 focus:ring-0 text-slate-900 dark:text-white outline-none" placeholder="Search..." type="text" />
-                    </div>
-                    {isLoggedIn ? (
-                        <div className="flex items-center gap-2 group cursor-pointer ml-4" onClick={() => navigate('/dashboard')}>
-                            <div className="bg-center bg-no-repeat bg-cover rounded-full h-8 w-8 ring-2 ring-primary/20" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuD0bven8Gj-y_gDHCU9S7cz2hhOKY-7LbnyluD0InI58nuqjisUp0fG7N1l_RD30KbbfJwnahqw9xtfpi6Eu9MxyG4XHno8Jas20r9KF5rWWtauuuHWHjsTr4Fa2wI6FdMekYd6G-_M5rlqsAWEMQH0kBz2gOsbSeskJOKprz9Fq03DzvGChCph2CmbWAdQg7uUTuVN708-RM3l04EhKH7sosnYD1mGrBkgmIalL3ZU0xsZOFURsqffAPGPZj_T7NYMWt2QfDX11j_J")' }}></div>
-                            <span className="text-sm font-medium group-hover:text-primary transition-colors">{(window as any).currentUserName || 'Profile'}</span>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto relative z-10">
+                    <div className="flex md:flex-col gap-5 md:gap-6 rounded-2xl border border-white/5 bg-white/5 p-6 md:p-8 backdrop-blur-sm transition-all duration-300 hover:bg-white/10 hover:-translate-y-1 group">
+                        <div className="text-primary bg-primary/20 size-14 md:size-16 rounded-full flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
+                            <span className="material-symbols-outlined text-3xl md:text-4xl">shield</span>
                         </div>
-                    ) : (
-                        <button onClick={() => navigate('/login')} className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary text-white text-sm font-bold shadow-md hover:bg-primary/90 transition-colors">
-                            <span className="material-symbols-outlined text-sm">person</span>
-                            Log In
-                        </button>
-                    )}
+                        <div className="flex flex-col gap-2 justify-center">
+                            <h3 className="text-white text-xl md:text-2xl font-extrabold leading-tight uppercase tracking-tight">Secure</h3>
+                            <p className="text-slate-400 text-sm md:text-base leading-normal font-medium">End-to-end encrypted transactions for your absolute peace of mind.</p>
+                        </div>
+                    </div>
+
+                    <div className="flex md:flex-col gap-5 md:gap-6 rounded-2xl border border-white/5 bg-white/5 p-6 md:p-8 backdrop-blur-sm transition-all duration-300 hover:bg-white/10 hover:-translate-y-1 group">
+                        <div className="text-primary bg-primary/20 size-14 md:size-16 rounded-full flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
+                            <span className="material-symbols-outlined text-3xl md:text-4xl">bolt</span>
+                        </div>
+                        <div className="flex flex-col gap-2 justify-center">
+                            <h3 className="text-white text-xl md:text-2xl font-extrabold leading-tight uppercase tracking-tight">Fast</h3>
+                            <p className="text-slate-400 text-sm md:text-base leading-normal font-medium">Find and book your next breathtaking home in minutes, not days.</p>
+                        </div>
+                    </div>
+
+                    <div className="flex md:flex-col gap-5 md:gap-6 rounded-2xl border border-white/5 bg-white/5 p-6 md:p-8 backdrop-blur-sm transition-all duration-300 hover:bg-white/10 hover:-translate-y-1 group">
+                        <div className="text-primary bg-primary/20 size-14 md:size-16 rounded-full flex items-center justify-center shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
+                            <span className="material-symbols-outlined text-3xl md:text-4xl">verified_user</span>
+                        </div>
+                        <div className="flex flex-col gap-2 justify-center">
+                            <h3 className="text-white text-xl md:text-2xl font-extrabold leading-tight uppercase tracking-tight">Verified</h3>
+                            <p className="text-slate-400 text-sm md:text-base leading-normal font-medium">Every premium listing is manually checked for quality and authenticity.</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            </section>
+
+            {/* Footer */}
+            <footer className="bg-background-light dark:bg-background-dark px-6 md:px-12 pt-24 pb-32 md:pb-24 mt-12 border-t border-slate-200 dark:border-white/5">
+                <div className="max-w-6xl mx-auto flex flex-col md:flex-row gap-12 md:justify-between">
+                    <div className="flex flex-col gap-6 md:max-w-xs">
+                        <Link to="/" className="flex items-center gap-2 group cursor-pointer">
+                            <div className="text-primary bg-primary/10 p-2 rounded group-hover:bg-primary/20 transition-colors">
+                                <span className="material-symbols-outlined text-2xl">roofing</span>
+                            </div>
+                            <h3 className="text-slate-900 dark:text-slate-100 text-2xl font-black uppercase tracking-tighter group-hover:text-primary transition-colors">GetSet</h3>
+                        </Link>
+                        <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed font-medium">
+                            Redefining the way you find your next breathtaking home with security and style.
+                        </p>
+                        <div className="flex gap-4">
+                            <a className="text-slate-400 hover:text-primary transition-colors bg-white dark:bg-white/5 p-2 rounded-full shadow-sm" href="#">
+                                <span className="material-symbols-outlined">public</span>
+                            </a>
+                            <a className="text-slate-400 hover:text-primary transition-colors bg-white dark:bg-white/5 p-2 rounded-full shadow-sm" href="#">
+                                <span className="material-symbols-outlined">alternate_email</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-16">
+                        <div className="flex flex-col gap-4">
+                            <h4 className="text-slate-900 dark:text-slate-100 text-xs font-black uppercase tracking-widest">Platform</h4>
+                            <ul className="flex flex-col gap-3 text-sm text-slate-500 dark:text-slate-400 font-semibold">
+                                <li><a className="hover:text-primary transition-colors" href="#">Listings</a></li>
+                                <li><a className="hover:text-primary transition-colors" href="#">Pricing</a></li>
+                                <li><a className="hover:text-primary transition-colors" href="#">Locations</a></li>
+                            </ul>
+                        </div>
+                        <div className="flex flex-col gap-4">
+                            <h4 className="text-slate-900 dark:text-slate-100 text-xs font-black uppercase tracking-widest">Support</h4>
+                            <ul className="flex flex-col gap-3 text-sm text-slate-500 dark:text-slate-400 font-semibold">
+                                <li><a className="hover:text-primary transition-colors" href="#">Help Center</a></li>
+                                <li><a className="hover:text-primary transition-colors" href="#">Terms</a></li>
+                                <li><a className="hover:text-primary transition-colors" href="#">Privacy</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="max-w-6xl mx-auto pt-10 mt-12 border-t border-slate-200 dark:border-white/10 flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
+                    <p className="text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-[0.2em]">
+                        © 2024 GetSet Global. Built for the modern nomad.
+                    </p>
+                    <p className="text-slate-400 text-[10px] md:text-xs font-bold uppercase tracking-widest flex items-center gap-1">
+                        Made with <span className="material-symbols-outlined text-[14px] text-red-500 fill-current">favorite</span> by Stitch
+                    </p>
+                </div>
+            </footer>
 
             {/* Bottom Navigation (Mobile Only) */}
-            <div className="fixed bottom-0 z-20 w-full border-t border-slate-200 bg-white px-4 pb-safe pt-2 dark:border-slate-800 dark:bg-slate-950 md:hidden">
-                <div className="flex items-center justify-around py-2">
-                    <Link to="/" className="flex flex-col items-center justify-center gap-1 text-primary">
-                        <span className="material-symbols-outlined fill-current" style={{ fontVariationSettings: "'FILL' 1" }}>search</span>
-                        <span className="text-[10px] font-medium">Explore</span>
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-background-dark/95 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 px-6 pb-safe pt-3 z-[100] shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+                <div className="flex justify-between items-center max-w-md mx-auto mb-2">
+                    <Link to="/" className="flex flex-col items-center gap-1 text-primary">
+                        <span className="material-symbols-outlined fill-current" style={{ fontVariationSettings: "'FILL' 1" }}>explore</span>
+                        <p className="text-[10px] font-black uppercase tracking-widest">Explore</p>
                     </Link>
-                    <Link to="/saved" className="flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 cursor-pointer">
+                    <Link to="/saved" className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors">
                         <span className="material-symbols-outlined">favorite</span>
-                        <span className="text-[10px] font-medium">Saved</span>
+                        <p className="text-[10px] font-black uppercase tracking-widest">Saved</p>
                     </Link>
-                    <Link to="/messages" className="flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 cursor-pointer relative">
-                        <div className="relative">
-                            <span className="material-symbols-outlined">chat_bubble</span>
-                            {unreadCount > 0 && <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[8px] font-bold px-1 rounded-full">{unreadCount > 99 ? '99+' : unreadCount}</span>}
-                        </div>
-                        <span className="text-[10px] font-medium">Messages</span>
+                    <Link to="/messages" className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors relative">
+                        <span className="material-symbols-outlined">chat_bubble</span>
+                        {unreadCount > 0 && <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[8px] font-bold px-1 rounded-full">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+                        <p className="text-[10px] font-black uppercase tracking-widest">Messages</p>
                     </Link>
-                    <div className="flex flex-col items-center justify-center gap-1 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 cursor-pointer" onClick={() => navigate(isLoggedIn ? '/dashboard' : '/login')}>
+                    <div onClick={() => navigate(isLoggedIn ? '/dashboard' : '/login')} className="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 cursor-pointer transition-colors">
                         <span className="material-symbols-outlined">person</span>
-                        <span className="text-[10px] font-medium">Profile</span>
+                        <p className="text-[10px] font-black uppercase tracking-widest">Profile</p>
                     </div>
                 </div>
-            </div>
+            </nav>
 
         </div>
     );

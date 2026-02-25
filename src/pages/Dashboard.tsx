@@ -9,6 +9,7 @@ export default function Dashboard() {
     const [favorites, setFavorites] = useState<Set<string>>(new Set());
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('Overview');
 
     const navigate = useNavigate();
 
@@ -32,15 +33,14 @@ export default function Dashboard() {
                     const decoded = JSON.parse(decodedJson);
                     role = decoded.role || 'RENTER';
                     userName = decoded.name || decoded.sub || 'User';
-                    // Also set a mock variable for the UI if needed
                     (window as any).currentUserRole = role;
                     (window as any).currentUserName = userName;
                 } catch (decodeErr) {
-                    console.warn("Could not decode token, defaulting to RENTER", decodeErr);
+                    console.warn("Could not decode token", decodeErr);
                 }
 
                 try {
-                    // Fetch user's favorites for the heart toggle state
+                    // Fetch user's favorites
                     const favRes = await axios.get('/api/v1/favorites', { headers }).catch(() => ({ data: { content: [] } }));
                     const savedProperties = favRes.data.content?.map((f: any) => ({
                         id: f.propertyId,
@@ -52,7 +52,6 @@ export default function Dashboard() {
                     setFavorites(new Set(savedProperties.map((p: any) => p.id)));
 
                     if (role === 'OWNER') {
-                        // Fetch properties owned by this user
                         const propsRes = await axios.get('/api/v1/properties/owner/my-properties', { headers }).catch(() => ({ data: { content: [] } }));
                         setProperties(propsRes.data.content || []);
                     } else {
@@ -64,7 +63,6 @@ export default function Dashboard() {
 
                 try {
                     const enqEndpoint = role === 'OWNER' ? '/api/v1/enquiries/received' : '/api/v1/enquiries/my';
-
                     const [enqRes, countRes] = await Promise.all([
                         axios.get(enqEndpoint, { headers }).catch(() => ({ data: { content: [] } })),
                         axios.get('/api/v1/messages/unread-count', { headers }).catch(() => ({ data: { count: 0 } }))
@@ -85,39 +83,6 @@ export default function Dashboard() {
         fetchData();
     }, [navigate]);
 
-    const toggleFavorite = async (e: React.MouseEvent, propertyId: string) => {
-        e.stopPropagation();
-
-        const token = localStorage.getItem('accessToken');
-        if (!token) return;
-
-        const headers = { Authorization: `Bearer ${token}` };
-        const isFav = favorites.has(propertyId);
-
-        try {
-            if (isFav) {
-                await axios.delete(`/api/v1/favorites/${propertyId}`, { headers });
-                setFavorites(prev => {
-                    const newFavs = new Set(prev);
-                    newFavs.delete(propertyId);
-                    return newFavs;
-                });
-                // Remove from the displayed list as well
-                setProperties(prev => prev.filter(p => p.id !== propertyId));
-            } else {
-                await axios.post(`/api/v1/favorites/${propertyId}`, {}, { headers });
-                setFavorites(prev => {
-                    const newFavs = new Set(prev);
-                    newFavs.add(propertyId);
-                    return newFavs;
-                });
-            }
-        } catch (err) {
-            console.error("Failed to toggle favorite", err);
-            toast.error("Failed to update saved properties");
-        }
-    };
-
     const handleLogout = () => {
         localStorage.removeItem('accessToken');
         navigate('/login');
@@ -135,220 +100,242 @@ export default function Dashboard() {
                 headers: { Authorization: `Bearer ${token}` }
             });
 
-            // Refresh enquiries
             const role = (window as any).currentUserRole || 'RENTER';
             const endpoint = role === 'OWNER' ? '/api/v1/enquiries/received' : '/api/v1/enquiries/my';
             const enqRes = await axios.get(endpoint, { headers: { Authorization: `Bearer ${token}` } });
             setEnquiries(enqRes.data.content || enqRes.data || []);
-
+            toast.success("Enquiry status updated");
         } catch (err) {
-            console.error("Failed to update enquiry status", err);
             toast.error("Failed to update enquiry status");
         }
     };
 
+    const roleDisplayName = (window as any).currentUserRole === 'OWNER' ? 'Owner Premium' : 'Renter Gold';
+    const avatarUrl = "https://lh3.googleusercontent.com/aida-public/AB6AXuD0bven8Gj-y_gDHCU9S7cz2hhOKY-7LbnyluD0InI58nuqjisUp0fG7N1l_RD30KbbfJwnahqw9xtfpi6Eu9MxyG4XHno8Jas20r9KF5rWWtauuuHWHjsTr4Fa2wI6FdMekYd6G-_M5rlqsAWEMQH0kBz2gOsbSeskJOKprz9Fq03DzvGChCph2CmbWAdQg7uUTuVN708-RM3l04EhKH7sosnYD1mGrBkgmIalL3ZU0xsZOFURsqffAPGPZj_T7NYMWt2QfDX11j_J";
+
     return (
-        <div className="relative flex h-full min-h-screen w-full flex-col bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 antialiased shadow-2xl animate-fade-in">
-            {/* Main Content Area */}
-            <main className="flex-1 overflow-y-auto pb-24 px-4 md:px-8 max-w-7xl mx-auto w-full">
-                {/* Header (Mobile Only) */}
-                <header className="flex flex-col gap-2 pt-6 pb-2 md:mt-20 md:hidden">
-                    <div className="flex items-center h-12 justify-between">
-                        <div className="flex items-center gap-3">
-                            <div className="bg-center bg-no-repeat bg-cover rounded-full h-12 w-12 ring-2 ring-primary/20" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuD0bven8Gj-y_gDHCU9S7cz2hhOKY-7LbnyluD0InI58nuqjisUp0fG7N1l_RD30KbbfJwnahqw9xtfpi6Eu9MxyG4XHno8Jas20r9KF5rWWtauuuHWHjsTr4Fa2wI6FdMekYd6G-_M5rlqsAWEMQH0kBz2gOsbSeskJOKprz9Fq03DzvGChCph2CmbWAdQg7uUTuVN708-RM3l04EhKH7sosnYD1mGrBkgmIalL3ZU0xsZOFURsqffAPGPZj_T7NYMWt2QfDX11j_J")' }}></div>
-                            <div>
-                                <p className="text-slate-500 dark:text-slate-400 text-xs font-medium">Welcome back</p>
-                                <h1 className="text-slate-900 dark:text-slate-100 text-xl font-bold leading-tight">{(window as any).currentUserName || 'User'}</h1>
+        <div className="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen flex flex-col">
+
+            {/* Header Section */}
+            <header className="pt-8 md:pt-12 px-6 md:px-12 max-w-7xl mx-auto w-full pb-4">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                        <button onClick={() => navigate(-1)} className="flex items-center justify-center size-10 rounded-full bg-white dark:bg-[#183432] border border-slate-200 dark:border-[#224946] text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-[#1a3a37] hover:text-primary transition-all shadow-sm">
+                            <span className="material-symbols-outlined ml-1 text-lg">arrow_back_ios</span>
+                        </button>
+                        <div className="relative">
+                            <div className="size-14 md:size-16 rounded-full border-2 border-primary overflow-hidden bg-slate-800">
+                                <img src={avatarUrl} alt="Profile" className="w-full h-full object-cover" />
+                            </div>
+                            <div className="absolute -bottom-1 -right-1 size-5 bg-primary rounded-full border-2 border-background-light dark:border-background-dark flex items-center justify-center">
+                                <span className="material-symbols-outlined text-[10px] text-[#102221] font-bold" style={{ fontVariationSettings: "'FILL' 1" }}>verified</span>
                             </div>
                         </div>
-                        <div className="flex items-center justify-end">
-                            <button className="flex items-center justify-center rounded-full h-10 w-10 bg-slate-200 dark:bg-slate-800 text-slate-900 dark:text-white relative hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors">
-                                <span className="material-symbols-outlined text-[24px]">notifications</span>
-                                <span className="absolute top-2 right-2.5 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-[#101822]"></span>
-                            </button>
+                        <div>
+                            <h1 className="text-2xl md:text-3xl font-extrabold leading-tight">Welcome back, {(window as any).currentUserName || 'User'}</h1>
+                            <span className="text-primary text-xs md:text-sm font-bold tracking-widest uppercase">{roleDisplayName}</span>
                         </div>
                     </div>
-                </header>
 
-                {/* Dashboard Desktop Header */}
-                <div className="hidden md:flex items-center justify-between pt-24 pb-6">
-                    <div>
-                        <h1 className="text-3xl font-bold text-slate-900 dark:text-white">Dashboard</h1>
-                        <p className="text-slate-500 dark:text-slate-400 mt-1">Manage your properties and enquiries.</p>
+                    <div className="flex items-center gap-3">
+                        <button onClick={() => navigate('/')} className="size-12 rounded-full bg-white dark:bg-[#183432] flex items-center justify-center border border-slate-200 dark:border-[#224946] text-slate-400 hover:text-primary transition-colors shadow-sm cursor-pointer" title="Go to Home">
+                            <span className="material-symbols-outlined text-[20px]">home</span>
+                        </button>
+                        <button className="hidden md:flex bg-primary/10 text-primary px-4 py-2 text-sm font-bold uppercase tracking-widest rounded-full hover:bg-primary/20 transition-colors">
+                            Upgrade
+                        </button>
+                        <button onClick={handleLogout} className="size-12 rounded-full bg-white dark:bg-[#183432] flex items-center justify-center border border-slate-200 dark:border-[#224946] text-slate-400 hover:text-red-500 transition-colors shadow-sm">
+                            <span className="material-symbols-outlined text-[20px]">logout</span>
+                        </button>
                     </div>
                 </div>
+            </header>
 
-                {/* Section 1: Properties (Owned or Favorited) */}
-                <section className="mt-4">
-                    <div className="flex items-center justify-between pb-4">
-                        <h3 className="text-slate-900 dark:text-slate-100 text-xl font-bold leading-tight">
-                            {(window as any).currentUserRole === 'OWNER' ? 'My Properties' : 'Favorite Properties'}
-                        </h3>
-                        {(window as any).currentUserRole === 'OWNER' ? (
-                            <Link to="/add-property" className="flex items-center justify-center gap-1 px-3 py-1.5 rounded-lg bg-primary text-white text-sm font-bold shadow-sm hover:bg-primary/90 transition-colors">
-                                <span className="material-symbols-outlined text-[18px]">add</span>
-                                Add Property
-                            </Link>
-                        ) : (
-                            <span className="text-primary text-sm font-semibold hover:underline transition-colors cursor-pointer">See All</span>
-                        )}
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                        {loading ? (
-                            <div className="col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 animate-pulse-subtle">
-                                {[...Array(4)].map((_, i) => (
-                                    <div key={i} className="flex flex-col gap-3 rounded-2xl bg-slate-50 border border-slate-100 dark:border-slate-800 dark:bg-slate-900 p-2">
-                                        <div className="aspect-[4/3] w-full rounded-xl bg-slate-200 dark:bg-slate-800 animate-pulse"></div>
-                                        <div className="absolute inset-x-0 bottom-0 p-3 pt-12">
-                                            <div className="h-5 w-1/3 bg-slate-300 dark:bg-slate-700 rounded animate-pulse mb-1"></div>
-                                            <div className="h-4 w-2/3 bg-slate-300 dark:bg-slate-700 rounded animate-pulse"></div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : properties.length > 0 ? properties.map((property, idx) => {
-                            // Fallback images
-                            const images = [
-                                "https://lh3.googleusercontent.com/aida-public/AB6AXuDeBed7S6pXR_DgFXPDjbmyzyEfuvTCKDG647PC5S0PuJJ0nxTxryfkwcbsIyLKzM2XpGdGPu6yavqMkVSoHKIfA7iNaP_TTO8tRNAxZ4uBmwHXSXi1RDU55VcdQAnq7bGUXcnS9XW14Tge38d4Z0dgwR-2H__v4WSQOcQv_qrD6IrNVGDMLXmgr0gL9VNuPBdyp-noKnYuvh_D4B6Y6ZITaLBoNApeSG_cEM5nEZnXRNcoSjaFOQWKXBohpWT8hcuuQ7KEH2852RrV",
-                                "https://lh3.googleusercontent.com/aida-public/AB6AXuB5IbXCRlHjdi7ZNXplqmEa4EJR1eXSGyVuFF1w5aihxAAydkzgKBlXuJJKryAZg9uOmhlZMm2Y4ghBfk6eYiwm6Zn3eAEgO8Mze5ASKx4_bBaAXpNmlMUBrh-VmvjcCdovPmCcuKWfJgCkICP2JZoEzHlWaihRtWaDIEwRLDwmp5aF-4dlntql57pSZt78XA5Xo206-MmqMLz1O9UmOp3O99Fr-zqIMUu-bPVMxsAACLXXi1sNOly7OPeGYBGeztp9tht21qodWr7p",
-                                "https://lh3.googleusercontent.com/aida-public/AB6AXuCRBO7jV8KQg3jv6bgxkJN8eEvwjNCzYG0ZMfZgsnzWrNZZJCaLnbOgemopEIb3geaWYYT7f2dWzzgh3-7wn516Ok_-4ZabPh9gj_mqjLOj9RWq910S85urTv9Q3u801YGSR-d_W68-IcPsVcM7H-0oDDpjTy7Mz6VSsDxZ9uu_DmlgcOjE_JOD8ZdTL1CDh5v2vZ8W8OiCp7jb3kTiGDIrHf4nTe_KL8bmR-9ffNxdTzpHVdtho9OtSNQ2W7BXkaMe0hacf_RRVfvg"
-                            ];
-                            const imgUrl = property.imageUrls && property.imageUrls.length > 0 ? property.imageUrls[0] : images[idx % images.length];
-
-                            return (
-                                <div key={property.id} onClick={() => navigate(`/properties/${property.id}`)} className="group relative flex flex-col gap-3 rounded-2xl bg-slate-50 border border-slate-100 dark:border-slate-800 dark:bg-slate-900 cursor-pointer shadow-sm hover:shadow-md transition-shadow p-2">
-                                    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-xl">
-                                        <div className="absolute inset-0 bg-cover bg-center transition-transform duration-500 group-hover:scale-105" style={{ backgroundImage: `url("${imgUrl}")` }}></div>
-                                        <div className="absolute top-2 right-2 flex gap-2">
-                                            {(window as any).currentUserRole === 'OWNER' && (
-                                                <button onClick={(e) => { e.stopPropagation(); navigate(`/edit-property/${property.id}`); }} className="flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm transition-colors bg-white/90 text-slate-700 hover:bg-white hover:text-primary shadow-sm" title="Edit Property">
-                                                    <span className="material-symbols-outlined text-[16px]">edit</span>
-                                                </button>
-                                            )}
-                                            {(window as any).currentUserRole !== 'OWNER' && (
-                                                <button onClick={(e) => toggleFavorite(e, property.id)} className={`flex h-8 w-8 items-center justify-center rounded-full backdrop-blur-sm transition-colors ${favorites.has(property.id) ? 'bg-white/90 text-primary hover:bg-white' : 'bg-black/40 text-white hover:bg-black/60'}`}>
-                                                    <span className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: favorites.has(property.id) ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
-                                                </button>
-                                            )}
-                                        </div>
-                                        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-3 pt-12">
-                                            <p className="text-white text-lg font-bold leading-tight">${property.pricePerMonth}<span className="text-sm font-normal text-slate-300">/mo</span></p>
-                                            <p className="text-slate-200 text-sm truncate">{property.title}</p>
-                                        </div>
-                                    </div>
-                                </div>
-                            );
-                        }) : (
-                            <div className="py-8 text-slate-500">No favorite properties found.</div>
-                        )}
-                    </div>
-                </section>
-
-                {/* Section 2: Pending Enquiries (Grid List) */}
-                <section className="mt-8">
-                    <div className="flex items-center justify-between pb-4">
-                        <h3 className="text-slate-900 dark:text-slate-100 text-xl font-bold leading-tight">Pending Enquiries</h3>
-                        <div className="flex gap-1">
-                            <button className="p-1 px-3 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"><span className="material-symbols-outlined text-[18px]">filter_list</span> Filter</button>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {enquiries.length > 0 ? enquiries.map(enquiry => (
-                            <div key={enquiry.id || enquiry._id || Math.random()} className="group flex items-center gap-4 p-4 bg-white dark:bg-[#1c2027] rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer border border-slate-100 dark:border-slate-800/50">
-                                <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-slate-200 dark:bg-slate-800">
-                                    <div className="h-full w-full bg-cover bg-center" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDbm1mjiGK-x4or6tl-FBZFZLkg3reh90FPR19WI22cVbOBmCNj1N0zWHqmEQKq2yEn0b0nxU7wpXLW2V18eaCL90QSqsKsnzWdBlWCxbNHbBmmFytNOhAiiS4f8URhD7MJ7b2ulpT4TYQ7QuU5F2Nc9sJAIq4cJPcOtomtBySJoVaXaDcTG3AwnvhAvOhsJ3hI5NqVYkBAVq4HXBftXrnAUqjdaC_z_Q8ALXogfige7Pl0vb321NtEx-XfMUBUpikCrpzxNpPlvgst")' }}></div>
-                                </div>
-                                <div className="flex flex-1 flex-col justify-center">
-                                    <div className="flex items-start justify-between">
-                                        <p className="text-slate-900 dark:text-white text-base font-bold leading-tight line-clamp-1">{enquiry.propertyTitle || `Property #${(enquiry.propertyId || '').substring(0, 6)}`}</p>
-                                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${enquiry.status === 'ACCEPTED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300' : 'bg-slate-100 text-slate-600 dark:bg-slate-700 dark:text-slate-300'}`}>{enquiry.status || 'SENT'}</span>
-                                    </div>
-                                    <p className="text-slate-500 dark:text-slate-400 text-sm leading-normal mt-1 line-clamp-1">{enquiry.message || 'Waiting for reply'}</p>
-                                </div>
-                                {(window as any).currentUserRole === 'OWNER' && (enquiry.status === 'PENDING' || !enquiry.status || enquiry.status === 'SENT') ? (
-                                    <div className="flex items-center gap-2">
-                                        <button onClick={(e) => { e.stopPropagation(); updateEnquiryStatus(enquiry.id || enquiry._id, 'ACCEPTED'); }} className="px-3 py-1.5 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-500/20 dark:text-emerald-300 dark:hover:bg-emerald-500/30 rounded-lg text-[13px] font-bold transition-colors">Accept</button>
-                                        <button onClick={(e) => { e.stopPropagation(); updateEnquiryStatus(enquiry.id || enquiry._id, 'REJECTED'); }} className="px-3 py-1.5 bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-500/20 dark:text-red-300 dark:hover:bg-red-500/30 rounded-lg text-[13px] font-bold transition-colors">Reject</button>
-                                    </div>
-                                ) : (
-                                    <div className="text-slate-400 dark:text-slate-600">
-                                        <span className="material-symbols-outlined text-[20px]">chevron_right</span>
-                                    </div>
-                                )}
-                            </div>
-                        )) : (
-                            <div className="py-8 text-slate-500 col-span-full">No pending enquiries found.</div>
-                        )}
-                    </div>
-                </section>
-                <div className="h-24"></div> {/* Spacer for bottom nav */}
-            </main>
-
-            {/* Web Header Navigation */}
-            <div className="fixed top-0 left-0 w-full z-50 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 py-4 hidden md:flex items-center justify-between">
-                <div className="flex items-center gap-8">
-                    <h1 className="text-2xl font-bold tracking-tight text-primary">GetSet</h1>
-                    <div className="flex items-center gap-6">
-                        <Link to="/" className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">Explore</Link>
-                        <Link to="/saved" className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors">Saved</Link>
-                        <Link to="/messages" className="text-sm font-medium text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors relative">
-                            Messages
-                            {unreadCount > 0 && <span className="absolute -top-2 -right-3 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full">{unreadCount > 99 ? '99+' : unreadCount}</span>}
+            {/* Navigation Tabs */}
+            <nav className="px-6 md:px-12 py-4 max-w-7xl mx-auto w-full">
+                <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+                    {['Overview', (window as any).currentUserRole === 'OWNER' ? 'My Properties' : 'My Trips', 'Enquiries', 'Settings'].map(tab => (
+                        <button
+                            key={tab}
+                            onClick={() => setActiveTab(tab)}
+                            className={`px-6 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-all shadow-sm
+                                ${activeTab === tab
+                                    ? 'bg-primary text-slate-900 border border-primary'
+                                    : 'bg-white dark:bg-[#183432] text-slate-500 dark:text-slate-300 border border-slate-200 dark:border-[#224946] hover:bg-slate-50 dark:hover:bg-[#1a3a37]'
+                                }`}
+                        >
+                            {tab}
+                        </button>
+                    ))}
+                    {(window as any).currentUserRole === 'OWNER' && (
+                        <Link to="/add-property" className="ml-auto bg-gradient-to-r from-primary to-[#00c9b7] text-[#102221] px-6 py-2.5 rounded-full text-sm font-bold whitespace-nowrap shadow-lg shadow-primary/20 hover:scale-105 transition-transform flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[18px]">add</span> Add
                         </Link>
-                    </div>
-                </div>
-                <div className="flex items-center gap-4">
-                    <Link to="/dashboard" className="text-sm font-semibold text-primary">Dashboard</Link>
-                    <div className="flex items-center gap-2 group cursor-pointer ml-4">
-                        <div className="bg-center bg-no-repeat bg-cover rounded-full h-8 w-8 ring-2 ring-primary/20" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuD0bven8Gj-y_gDHCU9S7cz2hhOKY-7LbnyluD0InI58nuqjisUp0fG7N1l_RD30KbbfJwnahqw9xtfpi6Eu9MxyG4XHno8Jas20r9KF5rWWtauuuHWHjsTr4Fa2wI6FdMekYd6G-_M5rlqsAWEMQH0kBz2gOsbSeskJOKprz9Fq03DzvGChCph2CmbWAdQg7uUTuVN708-RM3l04EhKH7sosnYD1mGrBkgmIalL3ZU0xsZOFURsqffAPGPZj_T7NYMWt2QfDX11j_J")' }}></div>
-                        <span className="text-sm font-medium group-hover:text-primary transition-colors">{(window as any).currentUserName || 'User'}</span>
-                    </div>
-                    <button onClick={handleLogout} className="ml-2 flex items-center justify-center rounded-full bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 p-2 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors" title="Logout">
-                        <span className="material-symbols-outlined text-[20px]">logout</span>
-                    </button>
-                </div>
-            </div>
-
-            {/* Bottom Navigation Bar (Mobile Only) */}
-            <nav className="fixed bottom-0 left-0 right-0 border-t border-slate-200 dark:border-slate-800 bg-white/90 dark:bg-[#1c2027]/90 backdrop-blur-md px-4 pb-safe pt-2 z-50 md:hidden">
-                <div className="flex justify-between items-end py-2">
-                    <Link to="/" className="flex flex-1 flex-col items-center justify-end gap-1 text-slate-400 dark:text-[#9da8b9] hover:text-primary dark:hover:text-primary transition-colors group">
-                        <div className="flex h-7 items-center justify-center group-hover:-translate-y-0.5 transition-transform duration-200">
-                            <span className="material-symbols-outlined text-[24px]">home</span>
-                        </div>
-                        <p className="text-[10px] font-medium leading-normal tracking-[0.015em]">Home</p>
-                    </Link>
-                    <Link to="/saved" className="flex flex-1 flex-col items-center justify-end gap-1 text-slate-400 dark:text-[#9da8b9] hover:text-primary dark:hover:text-primary transition-colors group cursor-pointer">
-                        <div className="flex h-7 items-center justify-center group-hover:-translate-y-0.5 transition-transform duration-200">
-                            <span className="material-symbols-outlined text-[24px]">favorite</span>
-                        </div>
-                        <p className="text-[10px] font-medium leading-normal tracking-[0.015em]">Saved</p>
-                    </Link>
-                    {/* Active Item */}
-                    <Link to="/dashboard" className="flex flex-1 flex-col items-center justify-end gap-1 text-primary">
-                        <div className="flex h-7 items-center justify-center">
-                            <span className="material-symbols-outlined text-[24px]" style={{ fontVariationSettings: "'FILL' 1" }}>grid_view</span>
-                        </div>
-                        <p className="text-[10px] font-bold leading-normal tracking-[0.015em]">Dashboard</p>
-                    </Link>
-                    <Link to="/messages" className="flex flex-1 flex-col items-center justify-end gap-1 text-slate-400 dark:text-[#9da8b9] hover:text-primary dark:hover:text-primary transition-colors group cursor-pointer relative">
-                        <div className="flex h-7 items-center justify-center group-hover:-translate-y-0.5 transition-transform duration-200 relative">
-                            <span className="material-symbols-outlined text-[24px]">chat_bubble</span>
-                            {/* @ts-ignore */}
-                            {unreadCount > 0 && <span className="absolute -top-1 -right-2 bg-red-500 text-white text-[9px] font-bold px-1 rounded-full">{unreadCount > 99 ? '99+' : unreadCount}</span>}
-                        </div>
-                        <p className="text-[10px] font-medium leading-normal tracking-[0.015em]">Messages</p>
-                    </Link>
-                    <button onClick={handleLogout} className="flex flex-1 flex-col items-center justify-end gap-1 text-red-400 hover:text-red-600 dark:hover:text-red-500 transition-colors group border-none bg-transparent p-0">
-                        <div className="flex h-7 items-center justify-center group-hover:-translate-y-0.5 transition-transform duration-200 text-red-500 font-bold">
-                            <span className="material-symbols-outlined text-[24px]">logout</span>
-                        </div>
-                        <p className="text-[10px] font-medium leading-normal tracking-[0.015em] text-red-500">Logout</p>
-                    </button>
+                    )}
                 </div>
             </nav>
+
+            {/* Main Content Area */}
+            <main className="flex-1 px-6 md:px-12 pt-4 pb-24 max-w-7xl mx-auto w-full space-y-10">
+
+                {/* Properties Section */}
+                {(activeTab === 'Overview' || activeTab === 'My Properties' || activeTab === 'My Trips') && (
+                    <section>
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl md:text-2xl font-bold">{(window as any).currentUserRole === 'OWNER' ? 'Your Portfolio' : 'Saved & Upcoming'}</h2>
+                            <button className="text-primary text-sm font-bold hover:underline">See All</button>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {loading ? (
+                                [...Array(3)].map((_, i) => (
+                                    <div key={i} className="bg-slate-100 dark:bg-[#183432]/50 backdrop-blur-md border border-slate-200 dark:border-[#224946] p-4 rounded-2xl flex gap-4 animate-pulse-subtle">
+                                        <div className="w-24 h-24 rounded-xl bg-slate-200 dark:bg-slate-800 animate-pulse shrink-0"></div>
+                                        <div className="flex-1 py-1">
+                                            <div className="w-3/4 h-5 bg-slate-200 dark:bg-slate-800 rounded mb-2"></div>
+                                            <div className="w-1/2 h-4 bg-slate-200 dark:bg-slate-800 rounded"></div>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : properties.length > 0 ? properties.map((property, idx) => {
+                                const images = [
+                                    "https://lh3.googleusercontent.com/aida-public/AB6AXuCHUbbTZISep_tO4nUuHpPaPnDnBGy8NyHLkvA73JjlqyIzfDOynuJ0FRkq54WzzDWIgDVSMpeFEALnUHgEX5ra1yCBQn9luir7Q8DaFCaiyWWC8Nmh5Tyr9zRjRrVrf2rjVLWmkBuj6Pd8WJYqRxaKyjyvkVaT7gPNS0otonsCyIEVYRlvXVGB14ers0XTWc9YvXsa_t4O5uriUiV5pDvBUhw64moPgUfX237PwfHyk7OPtdPfosQfmoYVdtdZyh0RlWL5-yWn_Q",
+                                    "https://lh3.googleusercontent.com/aida-public/AB6AXuA2_E_8O8rchKJy-qpok9ORuD5Fy7vopTQg195c9olOXCReIuKPYnZmQGI7HsOKeE_eBRUPsWqHGI4qHa07ITwDGw59Bp0PouVomySimAWxAcGwdKBq_5BTvPW2Kc4sYi6fraaLDHJ1_pN2cb4jjd7qeXcYe2z-9vW0eXRgbaSPjFUmMKUuNQdE6CyoJsGSH7-ir7NOkPoxkfZ2LY2wnUWkMQa0ow31ld8JfT5hbgqXbvHHqS9J-HaGC_0KUaWHJ5gIwMfQG76YSA"
+                                ];
+                                const imgUrl = property.imageUrls?.length > 0 ? property.imageUrls[0] : images[idx % images.length];
+
+                                return (
+                                    <div key={property.id} className="bg-white dark:bg-[#183432]/50 backdrop-blur-md border border-slate-200 dark:border-[#224946] p-4 rounded-2xl flex gap-4 shadow-sm hover:shadow-md transition-shadow group">
+                                        <div className="w-24 h-24 rounded-xl overflow-hidden shrink-0 relative">
+                                            <img src={imgUrl} alt="Property" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                                        </div>
+                                        <div className="flex-1 flex flex-col justify-between py-1">
+                                            <div>
+                                                <div className="flex justify-between items-start">
+                                                    <h3 className="font-bold text-base leading-snug line-clamp-1">{property.title}</h3>
+                                                </div>
+                                                <div className="flex justify-between items-center mt-1">
+                                                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">${property.pricePerMonth || property.price}<span className="text-[10px]">/mo</span></p>
+                                                    <span className="bg-primary/10 text-primary text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-widest border border-primary/20">Active</span>
+                                                </div>
+                                            </div>
+                                            <button onClick={() => navigate((window as any).currentUserRole === 'OWNER' ? `/edit-property/${property.id}` : `/properties/${property.id}`)} className="mt-2 flex items-center gap-1 text-primary text-sm font-bold hover:text-teal-400 transition-colors w-max">
+                                                {(window as any).currentUserRole === 'OWNER' ? 'Edit Listing' : 'View Details'}
+                                                <span className="material-symbols-outlined text-sm">arrow_forward</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            }) : (
+                                <div className="col-span-full py-8 text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-white/5 rounded-2xl text-center border border-dashed border-slate-300 dark:border-white/10">No properties found.</div>
+                            )}
+                        </div>
+                    </section>
+                )}
+
+                {/* Enquiries Section */}
+                {(activeTab === 'Overview' || activeTab === 'Enquiries') && (
+                    <section>
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-xl md:text-2xl font-bold">Recent Enquiries</h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {loading ? (
+                                <div className="text-slate-400 animate-pulse">Loading enquiries...</div>
+                            ) : enquiries.length > 0 ? enquiries.map(enquiry => (
+                                <div key={enquiry.id || Math.random()} className="bg-white dark:bg-[#183432]/50 backdrop-blur-md border border-slate-200 dark:border-[#224946] p-5 rounded-2xl flex flex-col gap-3 shadow-sm hover:shadow-md transition-shadow">
+                                    <div className="flex justify-between items-start">
+                                        <div className="flex items-center gap-3">
+                                            <div className="size-10 rounded-full bg-slate-200 dark:bg-[#102221] flex items-center justify-center text-primary font-bold border border-primary/20">
+                                                {(enquiry.senderId || 'U')[0].toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <p className="font-bold text-sm line-clamp-1">{enquiry.propertyTitle || 'Property Inquiry'}</p>
+                                                <p className="text-xs text-slate-400">Message from user</p>
+                                            </div>
+                                        </div>
+                                        <span className={`text-[9px] font-bold px-2 py-1 rounded-full uppercase tracking-widest ${enquiry.status === 'ACCEPTED' ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : enquiry.status === 'REJECTED' ? 'bg-red-500/10 text-red-500 border border-red-500/20' : 'bg-primary/10 text-primary border border-primary/20'}`}>{enquiry.status || 'PENDING'}</span>
+                                    </div>
+                                    <p className="text-sm text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-[#102221] p-3 rounded-xl border border-slate-100 dark:border-white/5">"{enquiry.message || 'I am interested in this listing.'}"</p>
+
+                                    {(window as any).currentUserRole === 'OWNER' && (enquiry.status === 'PENDING' || !enquiry.status || enquiry.status === 'SENT') && (
+                                        <div className="flex items-center gap-2 mt-2 pt-3 border-t border-slate-100 dark:border-[#224946]">
+                                            <button onClick={() => updateEnquiryStatus(enquiry.id, 'ACCEPTED')} className="flex-1 bg-primary text-slate-900 py-2 rounded-xl text-sm font-bold shadow-sm shadow-primary/20 hover:scale-[0.98] transition-transform">Accept</button>
+                                            <button onClick={() => updateEnquiryStatus(enquiry.id, 'REJECTED')} className="flex-1 bg-white dark:bg-[#102221] text-red-500 border border-red-500/30 py-2 rounded-xl text-sm font-bold hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors">Decline</button>
+                                        </div>
+                                    )}
+                                </div>
+                            )) : (
+                                <div className="col-span-full py-8 text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-white/5 rounded-2xl text-center border border-dashed border-slate-300 dark:border-white/10">No pending enquiries at this time.</div>
+                            )}
+                        </div>
+                    </section>
+                )}
+
+                {/* Quick Stats Horizontal Scroll (Overview only) */}
+                {activeTab === 'Overview' && (
+                    <section className="pt-4">
+                        <h2 className="text-xl md:text-2xl font-bold mb-6">Quick Stats</h2>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div className="bg-white dark:bg-[#183432] rounded-2xl p-5 border border-slate-200 dark:border-[#224946] shadow-sm flex flex-col items-center text-center group hover:-translate-y-1 transition-transform">
+                                <div className="size-12 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-3 group-hover:bg-primary group-hover:text-[#102221] transition-colors">
+                                    <span className="material-symbols-outlined">favorite</span>
+                                </div>
+                                <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1">Total Saved</p>
+                                <p className="text-2xl font-black">{favorites.size || 0}</p>
+                            </div>
+                            <div className="bg-white dark:bg-[#183432] rounded-2xl p-5 border border-slate-200 dark:border-[#224946] shadow-sm flex flex-col items-center text-center group hover:-translate-y-1 transition-transform">
+                                <div className="size-12 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-3 group-hover:bg-primary group-hover:text-[#102221] transition-colors">
+                                    <span className="material-symbols-outlined">event_upcoming</span>
+                                </div>
+                                <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1">Upcoming</p>
+                                <p className="text-2xl font-black">{enquiries.length}</p>
+                            </div>
+                            <div className="bg-white dark:bg-[#183432] rounded-2xl p-5 border border-slate-200 dark:border-[#224946] shadow-sm flex flex-col items-center text-center group hover:-translate-y-1 transition-transform">
+                                <div className="size-12 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-3 group-hover:bg-primary group-hover:text-[#102221] transition-colors">
+                                    <span className="material-symbols-outlined">visibility</span>
+                                </div>
+                                <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1">Profile Views</p>
+                                <p className="text-2xl font-black">1.2k</p>
+                            </div>
+                            <div className="bg-white dark:bg-[#183432] rounded-2xl p-5 border border-slate-200 dark:border-[#224946] shadow-sm flex flex-col items-center text-center group hover:-translate-y-1 transition-transform">
+                                <div className="size-12 bg-primary/10 rounded-full flex items-center justify-center text-primary mb-3 group-hover:bg-primary group-hover:text-[#102221] transition-colors">
+                                    <span className="material-symbols-outlined">stars</span>
+                                </div>
+                                <p className="text-slate-500 dark:text-slate-400 text-[11px] font-bold uppercase tracking-widest mb-1">Reward Points</p>
+                                <p className="text-2xl font-black">850</p>
+                            </div>
+                        </div>
+                    </section>
+                )}
+
+            </main>
+
+            {/* Bottom Navigation Bar */}
+            <footer className="mt-auto border-t border-slate-200 dark:border-[#224946] bg-white dark:bg-[#183432] px-6 py-3 pb-safe fixed bottom-0 w-full z-50 md:hidden">
+                <div className="flex items-center justify-between">
+                    <Link to="/" className="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-400 hover:text-primary transition-colors">
+                        <span className="material-symbols-outlined">house</span>
+                        <span className="text-[10px] font-medium uppercase tracking-widest">Home</span>
+                    </Link>
+                    <Link to="/dashboard" className="flex flex-col items-center gap-1 text-primary relative -top-3">
+                        <div className="bg-primary text-[#102221] p-3 rounded-full shadow-lg shadow-primary/30 active:scale-95 transition-transform">
+                            <span className="material-symbols-outlined" style={{ fontVariationSettings: "'FILL' 1" }}>grid_view</span>
+                        </div>
+                        <span className="text-[10px] font-black uppercase tracking-widest">Panel</span>
+                    </Link>
+                    <Link to="/saved" className="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-400 hover:text-primary transition-colors">
+                        <span className="material-symbols-outlined">favorite</span>
+                        <span className="text-[10px] font-medium uppercase tracking-widest">Saved</span>
+                    </Link>
+                    <Link to="/messages" className="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-400 hover:text-primary transition-colors relative">
+                        <span className="material-symbols-outlined">chat</span>
+                        {unreadCount > 0 && <span className="absolute -top-1 -right-1 size-2 rounded-full bg-primary border-2 border-white dark:border-[#183432]"></span>}
+                        <span className="text-[10px] font-medium uppercase tracking-widest">Chat</span>
+                    </Link>
+                </div>
+            </footer>
         </div>
     );
 }

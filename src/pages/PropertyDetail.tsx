@@ -91,196 +91,188 @@ export default function PropertyDetail() {
 
     if (loading) {
         return (
-            <div className="relative h-screen w-full overflow-y-auto pb-24 bg-white dark:bg-slate-950 font-display text-slate-900 dark:text-slate-100 antialiased animate-fade-in animate-pulse-subtle">
-                <div className="sticky top-0 left-0 w-full z-20 bg-white/90 dark:bg-slate-950/90 border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex items-center justify-between">
-                    <div className="h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse"></div>
-                    <div className="flex gap-3">
-                        <div className="h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse"></div>
-                        <div className="h-10 w-10 rounded-full bg-slate-200 dark:bg-slate-800 animate-pulse"></div>
-                    </div>
-                </div>
-                <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
-                    <div className="w-full h-[30vh] md:h-[50vh] rounded-2xl bg-slate-200 dark:bg-slate-800 animate-pulse mb-8"></div>
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                        <div className="lg:col-span-2 flex flex-col gap-6">
-                            <div className="h-8 w-3/4 bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div>
-                            <div className="h-6 w-1/4 bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div>
-                            <div className="flex gap-4 mt-2">
-                                <div className="h-10 w-24 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse"></div>
-                                <div className="h-10 w-24 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse"></div>
-                                <div className="h-10 w-24 bg-slate-200 dark:bg-slate-800 rounded-lg animate-pulse"></div>
-                            </div>
-                            <div className="space-y-3 mt-4">
-                                <div className="h-4 w-full bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div>
-                                <div className="h-4 w-full bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div>
-                                <div className="h-4 w-5/6 bg-slate-200 dark:bg-slate-800 rounded animate-pulse"></div>
-                            </div>
-                        </div>
-                        <div className="lg:col-span-1">
-                            <div className="w-full h-80 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-slate-800 p-6 flex flex-col gap-6">
-                                <div className="h-8 w-1/2 bg-slate-200 dark:bg-slate-800 rounded animate-pulse mb-4"></div>
-                                <div className="h-12 w-full bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse"></div>
-                                <div className="h-12 w-full bg-slate-200 dark:bg-slate-800 rounded-xl animate-pulse"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+            <div className="relative h-screen w-full flex items-center justify-center bg-background-light dark:bg-background-dark font-display">
+                <div className="size-12 rounded-full border-4 border-primary/30 border-t-primary animate-spin"></div>
             </div>
         );
     }
     if (error || !property) return <div className="text-center p-8 text-red-500">{error || "Property not found"}</div>;
 
-    return (
-        <div className="relative h-screen w-full overflow-y-auto pb-24 bg-white dark:bg-slate-950 font-display text-slate-900 dark:text-slate-100 antialiased animate-fade-in">
-            {/* Top Navigation Bar */}
-            <div className="sticky top-0 left-0 w-full z-20 bg-white/90 dark:bg-slate-950/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                    <button onClick={() => navigate(-1)} className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                        <span className="material-symbols-outlined">arrow_back</span>
-                    </button>
-                    <span className="font-bold text-lg hidden md:block">Back to Search</span>
-                </div>
-                <div className="flex items-center gap-3">
-                    <button onClick={toggleFavorite} className={`flex items-center justify-center w-10 h-10 rounded-full transition-colors ${isFavorite ? 'bg-primary/10 text-primary hover:bg-primary/20' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'}`}>
-                        <span className="material-symbols-outlined" style={{ fontVariationSettings: isFavorite ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
-                    </button>
-                    <button className="flex items-center justify-center w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
-                        <span className="material-symbols-outlined">ios_share</span>
-                    </button>
-                </div>
-            </div>
+    const mainImageUrl = (property.imageUrls && property.imageUrls.length > 0) ? property.imageUrls[0] : "https://lh3.googleusercontent.com/aida-public/AB6AXuAc9E7zg-5BmFJ97Z7aoRUqEw1EgS9zDFtKnWTJGjYBRFW3r4u8SdlvzD-iPWVUXQ__zOwsZyBsB0a8zz1zTLubOi5qBHc7aO3IyXEqB8hu6-vco5oiRwYXPnYeFfR_oYcIY2QpKG70flckfZS-IK3VJ2n67tYA9EZQ8laYV1yIH4Ldj8ctg51gZ9zoKf5yxyPzmzva27aZBcm1PTh6r41ci1zt7Bd6cxcG61NHQd9fUx34FsrkeaoRgcex_ZL8cj6l37qC8inpeQ";
 
-            <div className="max-w-7xl mx-auto px-4 md:px-8 py-6">
-                {/* Image Gallery */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 md:gap-4 mb-8 rounded-2xl overflow-hidden">
-                    <div className="w-full h-[30vh] md:h-[50vh] bg-slate-200 dark:bg-slate-800 bg-cover bg-center" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDOO1IT3embHiTFGV8NJOjpYdaethGfhq-gMPuJuy-F_ttMM2B-_MjGjxwYbdscWcil9vwCLCycC96bruMMsbsNRC6H8gdhdENo75lUIquD5h4PwMEkO3RbxORJ3JNGEMz8A-BTEb_ZJQhF24l7FG0lwUXWyHKF7LwIdazeyOQc9a9ln7TyQgN5ImCVmZK_d2JIYP2ohivrIAXwHL7qSXz2l8ZR41jUoYAdMP-YWjpXBrhpt5nb8ZHgsxOdEpRHiWgO8n5FYioEH9kQ")' }}></div>
-                    <div className="hidden md:grid grid-cols-2 grid-rows-2 gap-4 h-[50vh]">
-                        <div className="bg-slate-200 dark:bg-slate-800 bg-cover bg-center" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuBEkYL4gcpKx9o4BSk-3lwyc9xXlohewMH0b63enSJcMRagkutN0lPm6hyfsCV5INaaj1ZPFKaf_cmpEcjKwpFCsYvfoZu2t7QdnDlLFwhHb-CrYSBqwJg5psprOXKvnJ8_--SsgbFQCNqqoto3qlaMml9XwrcUn_whyIADKWc4U9Hsw8N2lXwSKPIMGW1bW0xNqaJZ6oSbXIin4kI4_JCN_bPWpNYtp515RHYQkH-d6JUDrt4IbnzUkzr7q-z4RinxM7tO4aM9TuG7")' }}></div>
-                        <div className="bg-slate-200 dark:bg-slate-800 bg-cover bg-center" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAgY9u270A39TVvD-GitIsoXLr5_uhstNjX9KkjmVSWJ_fr-B0727diriUR-Y9VVvXoca5C_2UAZJRnzcW_tlSSFHsfUTudcObcy_8Ubq-YxnSj7Jz7KYJzFpsRtajVcSXc0UyWmosk9Txil3519kFPQCj-aXsu83IrpMhTKd29ksQnSMX-H0KXGOn3rhjWDjVBphL6JbxF4sj57HdEHfsFSCNn18J-YSxVZdFziIGCozbJVDvXW2E1K2hTnTe1RCMq0q4NBkFcM2AH")' }}></div>
-                        <div className="bg-slate-200 dark:bg-slate-800 bg-cover bg-center" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuDeBed7S6pXR_DgFXPDjbmyzyEfuvTCKDG647PC5S0PuJJ0nxTxryfkwcbsIyLKzM2XpGdGPu6yavqMkVSoHKIfA7iNaP_TTO8tRNAxZ4uBmwHXSXi1RDU55VcdQAnq7bGUXcnS9XW14Tge38d4Z0dgwR-2H__v4WSQOcQv_qrD6IrNVGDMLXmgr0gL9VNuPBdyp-noKnYuvh_D4B6Y6ZITaLBoNApeSG_cEM5nEZnXRNcoSjaFOQWKXBohpWT8hcuuQ7KEH2852RrV")' }}></div>
-                        <div className="bg-slate-200 dark:bg-slate-800 bg-cover bg-center" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuAlFiq8l-W6zcTk8oopSfH5vsMADW3eyZkzCwkQ8iNQ5gJ_lUQYXaF9bqsGICPLgSBUPSX7oymQKpexYIb6IQo7D9cjT22qzcEPS7DwimahqG6IkSVTOrFSL5ov7LaXVHyPwjzWKGhOzOwGEp6-1dJ1wHGMAtxRiGdNvFfVki7GW9lGjpkBBEUHks8hmDAX0iXuXFzeBfEiMEOzl0C8ebBDBSxZOmOukCqd3W0x4J_EiW11VLh-zwripf-LdJ0shuK5iNCkuz-v8Yge")' }}></div>
+    return (
+        <div className="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 font-display">
+            <div className="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden pb-32">
+
+                {/* Hero Gallery Section */}
+                <div className="relative w-full h-[55vh] md:h-[65vh] overflow-hidden">
+                    <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url('${mainImageUrl}')` }}>
+                        <div className="absolute inset-0 bg-gradient-to-t from-background-dark/90 via-transparent to-transparent"></div>
+                    </div>
+
+                    {/* Top Navigation */}
+                    <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-center z-10">
+                        <button onClick={() => navigate(-1)} className="bg-white/10 backdrop-blur-md border border-white/20 size-12 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors">
+                            <span className="material-symbols-outlined">arrow_back</span>
+                        </button>
+                        <div className="flex gap-3">
+                            <button className="bg-white/10 backdrop-blur-md border border-white/20 size-12 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors">
+                                <span className="material-symbols-outlined">share</span>
+                            </button>
+                            <button onClick={toggleFavorite} className="bg-white/10 backdrop-blur-md border border-white/20 size-12 rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-colors">
+                                <span className={`material-symbols-outlined ${isFavorite ? 'text-primary' : ''}`} style={{ fontVariationSettings: isFavorite ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Thumbnail Preview Overlay */}
+                    <div className="absolute bottom-6 right-6 flex gap-2">
+                        {(property.imageUrls || []).slice(1, 3).map((img: string, idx: number) => (
+                            <div key={idx} className={`size-16 rounded-xl overflow-hidden shadow-xl ${idx === 0 ? 'border-2 border-primary' : 'border border-white/20 opacity-80'}`}>
+                                <img src={img} alt="Property view" className="w-full h-full object-cover" />
+                            </div>
+                        ))}
+                        {property.imageUrls && property.imageUrls.length > 3 && (
+                            <div className="size-16 rounded-xl border border-white/20 bg-white/10 backdrop-blur-md flex items-center justify-center text-xs font-bold text-white shadow-xl cursor-pointer hover:bg-white/20 transition-colors">
+                                +{property.imageUrls.length - 3}
+                            </div>
+                        )}
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-                    {/* Main Content Column */}
-                    <div className="lg:col-span-2">
-                        {/* Title & Price Block */}
-                        <div className="flex flex-col gap-1 mb-6">
-                            <div className="flex justify-between items-start gap-4">
-                                <h1 className="text-2xl md:text-3xl font-bold leading-tight text-slate-900 dark:text-white">{property.title}</h1>
-                            </div>
-                            <div className="flex items-baseline gap-1 mt-1">
-                                <span className="text-primary dark:text-primary text-2xl font-extrabold tracking-tight">${property.pricePerMonth || property.price}</span>
-                                <span className="text-slate-500 dark:text-slate-400 text-sm font-medium">/ month</span>
-                            </div>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1">
-                                <span className="material-symbols-outlined text-base">location_on</span>
-                                {property.address}, {property.city}
-                            </p>
-                        </div>
+                {/* Content Section */}
+                <div className="px-6 md:px-12 lg:px-24 pt-8 max-w-7xl mx-auto w-full">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
 
-                        {/* Key Specs */}
-                        <div className="flex gap-3 overflow-x-auto pb-6 no-scrollbar">
-                            <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg flex-shrink-0 border border-slate-200 dark:border-slate-700/50">
-                                <span className="material-symbols-outlined text-primary" style={{ fontSize: '20px' }}>bed</span>
-                                <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{property.bedrooms || 0} Beds</span>
-                            </div>
-                            <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg flex-shrink-0 border border-slate-200 dark:border-slate-700/50">
-                                <span className="material-symbols-outlined text-primary" style={{ fontSize: '20px' }}>bathtub</span>
-                                <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{property.bathrooms || 0} Baths</span>
-                            </div>
-                            <div className="flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg flex-shrink-0 border border-slate-200 dark:border-slate-700/50">
-                                <span className="material-symbols-outlined text-primary" style={{ fontSize: '20px' }}>square_foot</span>
-                                <span className="text-sm font-semibold text-slate-700 dark:text-slate-200">{property.areaSqFt || property.areaSquareFeet || property.area || 0} sqft</span>
-                            </div>
-                        </div>
-
-                        <div className="h-px bg-slate-200 dark:bg-slate-800 mb-6"></div>
-
-                        {/* Host Profile */}
-                        <div className="flex items-center justify-between mb-6">
-                            <div className="flex items-center gap-3">
-                                <div className="relative">
-                                    <div className="w-14 h-14 rounded-full bg-cover bg-center border-2 border-primary/20" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCl1-jbCvmg2XfgzI9LtLgglDkvgwV5VWxlhFNqcVOG0daqEI164n-wPguYpAn9YCjNkpkfxAxvRv6VUoVXUFprn1NSzVUni4o08T5pS2WxozujaCJLkoxzBEDOPSGKrLUTZDBJRQr934UuiFI0HyMKF346Wsk4mqG70dcYEjL0lx8dXhPIhsw2XDcNvVZJWKvtUNX9zeH-4Ci8yUkAF3gqmBLt6EudebhUFOjQQd-5pFl7RvMd2Dnsqt1pRTymIqx6mn73sBk_7yDs")' }}></div>
-                                    <div className="absolute -bottom-1 -right-1 bg-primary text-white rounded-full p-0.5 border-2 border-background-light dark:border-background-dark">
-                                        <span className="material-symbols-outlined" style={{ fontSize: '14px', display: 'block' }}>verified</span>
+                        <div className="lg:col-span-2">
+                            <div className="flex flex-col gap-1">
+                                <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white">{property.title}</h1>
+                                <div className="flex items-center gap-2 mt-3">
+                                    <span className="material-symbols-outlined text-primary text-sm">location_on</span>
+                                    <p className="text-slate-500 dark:text-slate-400 text-sm md:text-base font-medium">{property.location?.address || property.address}, {property.city}</p>
+                                    <span className="text-slate-300 dark:text-slate-600 mx-1">•</span>
+                                    <div className="flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-yellow-400 text-sm fill-current">star</span>
+                                        <p className="text-sm md:text-base font-bold text-slate-900 dark:text-white">4.9</p>
+                                        <p className="text-xs md:text-sm text-slate-500 dark:text-slate-400">({Math.floor(Math.random() * 50) + 12} reviews)</p>
                                     </div>
                                 </div>
-                                <div>
-                                    <h3 className="text-base font-bold text-slate-900 dark:text-white">Hosted by {property.ownerEmail?.split('@')[0] || property.ownerId?.split('@')[0] || 'User'}</h3>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400">Superhost · Joined 2021</p>
+                            </div>
+
+                            {/* Quick Info Grid */}
+                            <div className="grid grid-cols-3 gap-4 mt-10">
+                                <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 md:p-6 flex flex-col items-center justify-center gap-2">
+                                    <span className="material-symbols-outlined text-primary text-2xl md:text-3xl">bed</span>
+                                    <span className="text-sm md:text-base font-semibold text-slate-900 dark:text-slate-300">{property.bedrooms || 1} Beds</span>
+                                </div>
+                                <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 md:p-6 flex flex-col items-center justify-center gap-2">
+                                    <span className="material-symbols-outlined text-primary text-2xl md:text-3xl">bathtub</span>
+                                    <span className="text-sm md:text-base font-semibold text-slate-900 dark:text-slate-300">{property.bathrooms || 1} Baths</span>
+                                </div>
+                                <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 md:p-6 flex flex-col items-center justify-center gap-2">
+                                    <span className="material-symbols-outlined text-primary text-2xl md:text-3xl">straighten</span>
+                                    <span className="text-sm md:text-base font-semibold text-slate-900 dark:text-slate-300">{property.areaSqFt || property.areaSquareFeet || Math.floor(Math.random() * 1000) + 500} sqft</span>
                                 </div>
                             </div>
-                            <button className="w-10 h-10 flex items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-primary hover:bg-primary/10 transition-colors">
-                                <span className="material-symbols-outlined">chat_bubble</span>
-                            </button>
-                        </div>
 
-                        {/* Description */}
-                        <div className="mb-8">
-                            <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">About this home</h3>
-                            <p className="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">
-                                {property.description}
-                            </p>
-                        </div>
+                            {/* Description */}
+                            <div className="mt-12">
+                                <h3 className="text-2xl font-bold mb-4 text-slate-900 dark:text-white">Description</h3>
+                                <p className="text-slate-600 dark:text-slate-400 leading-relaxed text-base md:text-lg">
+                                    {property.description || "Experience the pinnacle of luxury. This breathtaking property offers unparalleled design and state-of-the-art amenities designed for the ultimate getaway."}
+                                </p>
+                            </div>
 
-                        {/* Amenities */}
-                        {(property.amenities?.length > 0 || property.features?.amenities?.length > 0) && (
-                            <div className="mb-8">
-                                <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-4">What this place offers</h3>
-                                <div className="grid grid-cols-2 gap-3">
-                                    {(property.amenities || property.features.amenities).map((amenity: string) => (
-                                        <div key={amenity} className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800">
-                                            <span className="material-symbols-outlined text-primary">check_circle</span>
-                                            <span className="text-sm font-medium dark:text-slate-200">{amenity}</span>
+                            {/* Amenities Grid */}
+                            <div className="mt-12">
+                                <h3 className="text-2xl font-bold mb-6 text-slate-900 dark:text-white">Amenities</h3>
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                    {['Infinity Pool', 'High-speed Wifi', 'Private Gym', 'Free Parking', 'Kitchen', 'Workspace'].map(amenity => (
+                                        <div key={amenity} className="flex items-center gap-3 p-3 rounded-xl border border-slate-200 dark:border-white/10 bg-white dark:bg-white/5 shadow-sm">
+                                            <div className="size-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                                                <span className="material-symbols-outlined">
+                                                    {amenity.includes('Pool') ? 'pool' : amenity.includes('Wifi') ? 'wifi' : amenity.includes('Gym') ? 'fitness_center' : amenity.includes('Parking') ? 'local_parking' : amenity.includes('Kitchen') ? 'kitchen' : 'desk'}
+                                                </span>
+                                            </div>
+                                            <span className="font-semibold text-sm text-slate-700 dark:text-slate-200">{amenity}</span>
                                         </div>
                                     ))}
                                 </div>
+                                <button className="w-full md:w-auto mt-6 px-8 py-3 rounded-full border border-primary/30 text-primary font-bold shadow-sm hover:bg-primary/5 transition-colors">View All Amenities</button>
                             </div>
-                        )}
 
-                    </div>
-
-                    {/* Sidebar CTA Column for Desktop */}
-                    <div className="hidden lg:block relative">
-                        <div className="sticky top-28 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-6 shadow-xl">
-                            <div className="flex justify-between items-end mb-6">
-                                <span className="text-3xl font-bold text-slate-900 dark:text-white">${property.pricePerMonth || property.price} <span className="text-lg font-normal text-slate-500">/mo</span></span>
-                            </div>
-                            <div className="p-4 border border-slate-200 dark:border-slate-800 rounded-xl mb-6 bg-slate-50 dark:bg-slate-950/50">
-                                <div className="flex justify-between pb-3 border-b border-slate-200 dark:border-slate-800">
-                                    <span className="text-slate-600 dark:text-slate-400 font-medium">Available from</span>
-                                    <span className="text-slate-900 dark:text-white font-bold">Immediately</span>
+                            {/* Map Preview */}
+                            <div className="mt-12 mb-8">
+                                <div className="flex justify-between items-center mb-6">
+                                    <h3 className="text-2xl font-bold text-slate-900 dark:text-white">Location</h3>
+                                    <button className="text-primary font-bold hover:underline transition-all">Show on map</button>
                                 </div>
-                                <div className="flex justify-between pt-3">
-                                    <span className="text-slate-600 dark:text-slate-400 font-medium">Minimum lease</span>
-                                    <span className="text-slate-900 dark:text-white font-bold">12 months</span>
+                                <div className="w-full h-64 rounded-3xl overflow-hidden bg-slate-200 dark:bg-slate-800 relative shadow-inner border border-slate-100 dark:border-white/5">
+                                    <img className="w-full h-full object-cover grayscale opacity-60" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCc0RGaWPjLPDgOr_feQx4svnXx-0hyEr69APsTqvOcTJe74ezHztTWjngKmfaVVQ6AxM9Tk3bxQKXbUpQoHcAKsm97_Nuto9DgMo6cAqc5ZhCGcB2snoKfy7wYru94c570j8x2C9M7GgSoNeTiCIFCPJTLjqQV67LAfggOofaPdobp8RFS-qBxQGMQCbE-DnG5y3fuZkDyeblOaHnRUaJhB_Tgg6d4DW3mhUOLGvi6MxuzvLzUc3RG5UYNSzFHZiJa98sMfD3qsA" alt="Map" />
+                                    <div className="absolute inset-0 flex items-center justify-center">
+                                        <div className="size-16 rounded-full bg-primary/20 flex items-center justify-center backdrop-blur-sm">
+                                            <div className="size-5 rounded-full bg-primary shadow-lg shadow-primary/50"></div>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
-                            <button onClick={handleEnquiry} className="w-full bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2">
-                                <span>Chat with Owner</span>
-                                <span className="material-symbols-outlined text-lg">chat</span>
-                            </button>
-                            <p className="text-center text-xs text-slate-500 mt-4">You won't be charged yet</p>
                         </div>
+
+                        {/* Host / Desktop Booking Sidebar */}
+                        <div className="hidden lg:block">
+                            <div className="sticky top-8 bg-white dark:bg-[#152a28] rounded-[2rem] p-8 shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] dark:shadow-none border border-slate-100 dark:border-white/5 flex flex-col gap-8">
+                                <div className="flex items-start justify-between">
+                                    <div className="flex flex-col">
+                                        <span className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Monthly Cost</span>
+                                        <span className="text-4xl font-extrabold text-slate-900 dark:text-white">${property.pricePerMonth || property.price}</span>
+                                    </div>
+                                    <div className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-[14px]">flash_on</span>
+                                        Available
+                                    </div>
+                                </div>
+
+                                <div className="h-px bg-slate-200 dark:bg-white/10 w-full"></div>
+
+                                <div>
+                                    <h4 className="font-bold text-slate-900 dark:text-white mb-4 uppercase tracking-widest text-xs">Host Information</h4>
+                                    <div className="flex items-center gap-4">
+                                        <div className="relative">
+                                            <div className="w-14 h-14 rounded-full bg-slate-200 bg-cover bg-center border-2 border-white dark:border-[#152a28] shadow-md" style={{ backgroundImage: 'url("https://lh3.googleusercontent.com/aida-public/AB6AXuCl1-jbCvmg2XfgzI9LtLgglDkvgwV5VWxlhFNqcVOG0daqEI164n-wPguYpAn9YCjNkpkfxAxvRv6VUoVXUFprn1NSzVUni4o08T5pS2WxozujaCJLkoxzBEDOPSGKrLUTZDBJRQr934UuiFI0HyMKF346Wsk4mqG70dcYEjL0lx8dXhPIhsw2XDcNvVZJWKvtUNX9zeH-4Ci8yUkAF3gqmBLt6EudebhUFOjQQd-5pFl7RvMd2Dnsqt1pRTymIqx6mn73sBk_7yDs")' }}></div>
+                                            <div className="absolute -bottom-1 -right-1 bg-primary text-[#152a28] rounded-full p-0.5 shadow-sm">
+                                                <span className="material-symbols-outlined" style={{ fontSize: '14px', display: 'block', fontVariationSettings: "'FILL' 1" }}>verified</span>
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <h3 className="text-base font-bold text-slate-900 dark:text-white">{property.ownerEmail?.split('@')[0] || property.ownerId?.split('-')[0] || 'Julianne S.'}</h3>
+                                            <p className="text-xs text-slate-500 font-medium">Superhost · Rating 4.9</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <button onClick={handleEnquiry} className="w-full bg-gradient-to-r from-primary to-[#0ea5e9] text-white py-4 rounded-full font-bold text-lg shadow-lg shadow-primary/25 hover:shadow-primary/40 active:scale-95 transition-all flex items-center justify-center gap-2">
+                                    <span className="material-symbols-outlined">chat</span>
+                                    Contact Property
+                                </button>
+                                <p className="text-center text-xs font-medium text-slate-400 -mt-4">You won't be charged yet</p>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
-            </div>
 
-            {/* Floating Mobile CTA */}
-            <div className="fixed bottom-0 left-0 w-full bg-white dark:bg-[#101822] border-t border-slate-200 dark:border-slate-800 px-4 py-4 pb-safe lg:hidden z-30 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
-                <div className="flex items-center gap-4">
+                {/* Sticky Bottom Bar (Mobile/Tablet Only) */}
+                <div className="lg:hidden fixed bottom-0 left-0 right-0 p-6 bg-white/95 dark:bg-[#102221]/95 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 flex items-center justify-between z-40 pb-safe">
                     <div className="flex flex-col">
-                        <span className="text-xs text-slate-500 dark:text-slate-400">Total price</span>
-                        <span className="text-lg font-bold text-slate-900 dark:text-white">${property.pricePerMonth || property.price} <span className="text-sm font-normal text-slate-500">/mo</span></span>
+                        <span className="text-2xl font-extrabold text-slate-900 dark:text-white">${property.pricePerMonth || property.price}</span>
+                        <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">per month</span>
                     </div>
-                    <button onClick={handleEnquiry} className="flex-1 bg-primary hover:bg-primary/90 text-white font-bold py-3.5 px-4 rounded-xl shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2">
-                        <span>Chat with Owner</span>
+                    <button onClick={handleEnquiry} className="bg-gradient-to-r from-primary to-[#0ea5e9] text-white px-8 py-3.5 rounded-full font-bold text-sm shadow-xl shadow-primary/20 active:scale-95 transition-transform">
+                        Contact Property
                     </button>
                 </div>
-            </div>
 
+            </div>
         </div>
     );
 }
