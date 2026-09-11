@@ -13,15 +13,22 @@ export default function AddProperty() {
         description: '',
         address: '',
         city: '',
+        state: '',
+        pincode: '',
         price: '',
         bedrooms: '',
         bathrooms: '',
         area: '',
-        amenities: ''
+        propertyType: 'APARTMENT',
+        amenities: '',
+        furnished: false,
     });
+    const [imageUrls, setImageUrls] = useState<string[]>(['', '', '']);
+    const PROPERTY_TYPES = ['APARTMENT', 'HOUSE', 'VILLA', 'PG', 'STUDIO', 'PLOT'];
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+        const { name, type, value } = e.target as any;
+        setFormData({ ...formData, [name]: type === 'checkbox' ? e.target instanceof HTMLInputElement && e.target.checked : value });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -36,13 +43,22 @@ export default function AddProperty() {
                 return;
             }
 
+            const validImageUrls = imageUrls.filter(url => url.trim().length > 0);
             const payload = {
-                ...formData,
+                title: formData.title,
+                description: formData.description,
+                address: formData.address,
+                city: formData.city,
+                state: formData.state,
+                pincode: formData.pincode,
                 price: parseFloat(formData.price),
-                bedrooms: parseInt(formData.bedrooms),
-                bathrooms: parseInt(formData.bathrooms),
-                area: parseFloat(formData.area),
-                amenities: formData.amenities.split(',').map(item => item.trim()).filter(Boolean)
+                bedrooms: parseInt(formData.bedrooms) || 0,
+                bathrooms: parseInt(formData.bathrooms) || 0,
+                area: parseFloat(formData.area) || 0,
+                propertyType: formData.propertyType,
+                furnished: formData.furnished,
+                amenities: formData.amenities.split(',').map((item: string) => item.trim()).filter(Boolean),
+                imageUrls: validImageUrls,
             };
 
             await axios.post('/api/v1/properties', payload, {
@@ -133,7 +149,28 @@ export default function AddProperty() {
                                 </div>
                                 <div className="flex flex-col gap-1.5 focus-within:text-primary transition-colors">
                                     <label className="text-[11px] font-bold uppercase tracking-widest ml-4 text-slate-500">City</label>
-                                    <input type="text" name="city" required value={formData.city} onChange={handleChange} className="w-full bg-slate-50 dark:bg-[#101822] border-none ring-1 ring-slate-200 dark:ring-white/10 focus:ring-2 focus:ring-primary rounded-2xl px-5 py-4 text-sm font-medium outline-none transition-shadow" placeholder="Metropolis" />
+                                    <input type="text" name="city" required value={formData.city} onChange={handleChange} className="w-full bg-slate-50 dark:bg-[#101822] border-none ring-1 ring-slate-200 dark:ring-white/10 focus:ring-2 focus:ring-primary rounded-2xl px-5 py-4 text-sm font-medium outline-none transition-shadow" placeholder="Mumbai" />
+                                </div>
+                                <div className="flex flex-col gap-1.5 focus-within:text-primary transition-colors">
+                                    <label className="text-[11px] font-bold uppercase tracking-widest ml-4 text-slate-500">State</label>
+                                    <input type="text" name="state" value={formData.state} onChange={handleChange} className="w-full bg-slate-50 dark:bg-[#101822] border-none ring-1 ring-slate-200 dark:ring-white/10 focus:ring-2 focus:ring-primary rounded-2xl px-5 py-4 text-sm font-medium outline-none transition-shadow" placeholder="Maharashtra" />
+                                </div>
+                                <div className="flex flex-col gap-1.5 focus-within:text-primary transition-colors">
+                                    <label className="text-[11px] font-bold uppercase tracking-widest ml-4 text-slate-500">PIN Code</label>
+                                    <input type="text" name="pincode" value={formData.pincode} onChange={handleChange} className="w-full bg-slate-50 dark:bg-[#101822] border-none ring-1 ring-slate-200 dark:ring-white/10 focus:ring-2 focus:ring-primary rounded-2xl px-5 py-4 text-sm font-medium outline-none transition-shadow" placeholder="400001" />
+                                </div>
+                            </div>
+
+                            {/* Property Type */}
+                            <div className="flex flex-col gap-1.5">
+                                <label className="text-[11px] font-bold uppercase tracking-widest ml-4 text-slate-500">Property Type</label>
+                                <div className="flex flex-wrap gap-2">
+                                    {PROPERTY_TYPES.map(t => (
+                                        <button key={t} type="button" onClick={() => setFormData(f => ({ ...f, propertyType: t }))}
+                                            className={`px-4 py-2.5 rounded-2xl text-xs font-bold transition-colors ${formData.propertyType === t ? 'bg-primary text-white shadow-lg shadow-primary/25' : 'bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate-400 hover:bg-primary/10 hover:text-primary border border-slate-200 dark:border-white/10'}`}>
+                                            {t}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
 
@@ -203,14 +240,42 @@ export default function AddProperty() {
                             </div>
 
                             <div className="flex flex-col gap-1.5">
-                                <label className="text-[11px] font-bold uppercase tracking-widest ml-4 text-slate-500">Property Photos</label>
-                                <div className="w-full border-2 border-dashed border-primary/40 dark:border-primary/30 rounded-[2rem] bg-primary/5 dark:bg-primary/10 p-10 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-primary/10 transition-colors group">
-                                    <div className="size-16 rounded-full bg-white dark:bg-[#152a28] shadow-lg shadow-primary/20 flex items-center justify-center text-primary group-hover:scale-110 transition-transform mb-4">
-                                        <span className="material-symbols-outlined text-3xl">cloud_upload</span>
-                                    </div>
-                                    <p className="text-slate-700 dark:text-slate-200 font-bold mb-1">Drag & Drop high-res photos here</p>
-                                    <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">JPEG, PNG or WEBP (Max 5MB each)</p>
+                                <label className="text-[11px] font-bold uppercase tracking-widest ml-4 text-slate-500">Property Photos (Image URLs)</label>
+                                <p className="text-xs text-slate-400 ml-4 -mt-1">Paste direct image URLs (Cloudinary, Google Photos, etc.)</p>
+                                <div className="space-y-3">
+                                    {imageUrls.map((url, idx) => (
+                                        <div key={idx} className="flex gap-2">
+                                            <input
+                                                type="url"
+                                                value={url}
+                                                onChange={e => setImageUrls(prev => { const n = [...prev]; n[idx] = e.target.value; return n; })}
+                                                className="flex-1 bg-slate-50 dark:bg-[#101822] border-none ring-1 ring-slate-200 dark:ring-white/10 focus:ring-2 focus:ring-primary rounded-2xl px-5 py-3.5 text-sm font-medium outline-none transition-shadow"
+                                                placeholder={`Photo ${idx + 1} URL (https://...)`}
+                                            />
+                                            {url && <img src={url} alt="preview" className="size-12 rounded-xl object-cover border-2 border-primary/20" onError={e => (e.currentTarget.style.display = 'none')} />}
+                                        </div>
+                                    ))}
+                                    {imageUrls.length < 8 && (
+                                        <button type="button" onClick={() => setImageUrls(prev => [...prev, ''])} className="flex items-center gap-2 text-primary text-sm font-bold hover:underline">
+                                            <span className="material-symbols-outlined text-base">add_photo_alternate</span>Add another photo
+                                        </button>
+                                    )}
                                 </div>
+                            </div>
+
+                            {/* Furnished toggle */}
+                            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-white/5 rounded-2xl border border-slate-200 dark:border-white/10">
+                                <div className="flex items-center gap-3">
+                                    <span className="material-symbols-outlined text-primary">chair</span>
+                                    <div>
+                                        <p className="font-bold text-sm">Furnished</p>
+                                        <p className="text-xs text-slate-500">Is the property furnished?</p>
+                                    </div>
+                                </div>
+                                <button type="button" onClick={() => setFormData(f => ({ ...f, furnished: !f.furnished }))}
+                                    className={`relative w-12 h-6 rounded-full transition-colors ${formData.furnished ? 'bg-primary' : 'bg-slate-300 dark:bg-slate-600'}`}>
+                                    <span className={`absolute top-0.5 left-0.5 size-5 bg-white rounded-full shadow-sm transition-transform ${formData.furnished ? 'translate-x-6' : 'translate-x-0'}`} />
+                                </button>
                             </div>
                         </div>
                     </section>
